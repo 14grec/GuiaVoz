@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">GuiaVoz</string>
+    <string name="intro">Assistente por voz. Toque em Ouvir comando e fale depois do sinal.</string>
+    <string name="listen">Ouvir comando</string>
+    <string name="run_text">Executar texto</string>
+    <string name="help">Ouvir ajuda</string>
+    <string name="accessibility_settings">Ajustes de acessibilidade</string>
+    <string name="typed_command_hint">Ou digite um comando para testar</string>
+    <string name="status_ready">Pronto para ajudar.</string>
+</resources>
