@@ -418,3 +418,9 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     @Override
+    protected void onDestroy() {
+        worker.shutdownNow();
+        if (voiceController != null) voiceController.destroy();
+        super.onDestroy();
+    }
+}
