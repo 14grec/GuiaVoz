@@ -2,6 +2,16 @@
 
 Protótipo nativo em Java para testar uma interface por voz voltada a pessoas com deficiência visual. O app reconhece comandos em português do Brasil, responde por síntese de fala e delega ações a outros apps com `Intent`.
 
+## Versão 0.2 — WhatsApp assistido
+
+- “Leia minhas mensagens do WhatsApp”: lê até oito mensagens novas capturadas pelas notificações.
+- “Ligar via WhatsApp para Maria”: resolve o contato, abre sua conversa e tenta acionar a chamada de voz.
+- “Executar o áudio do WhatsApp”: abre a última notificação de mensagem de voz e tenta tocar em **Reproduzir**.
+
+Na primeira execução, use os botões **Ativar leitura de mensagens** e **Ativar controles do WhatsApp**. O Android exige que a pessoa habilite manualmente os dois serviços. O serviço de acessibilidade é restrito a `com.whatsapp`, só executa uma ação após comando explícito e cancela a ação após 12 segundos.
+
+O WhatsApp não oferece API pública para histórico, chamadas ou reprodução de áudios. A leitura cobre apenas notificações recebidas após a ativação. Chamada e áudio dependem dos rótulos da interface em português do Brasil e podem precisar de ajustes quando o WhatsApp mudar.
+
 ## Baixar o APK compilado
 
 O GitHub Actions compila automaticamente um APK de teste a cada atualização da branch `main`.
