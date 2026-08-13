@@ -49,6 +49,28 @@ public final class CommandParser {
             return command(AssistantCommand.Type.LIST_APPS, "", "", original);
         }
 
+        if (normalized.equals("leia minhas mensagens do whatsapp")
+                || normalized.equals("ler minhas mensagens do whatsapp")
+                || normalized.equals("mensagens do whatsapp")) {
+            return command(AssistantCommand.Type.WHATSAPP_MESSAGES, "", "", original);
+        }
+
+        if (normalized.equals("executar o audio do whatsapp")
+                || normalized.equals("tocar o audio do whatsapp")
+                || normalized.equals("ouvir o audio do whatsapp")
+                || normalized.equals("reproduzir audio do whatsapp")) {
+            return command(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "", original);
+        }
+
+        for (String prefix : Arrays.asList(
+                "ligar via whatsapp para ", "ligue via whatsapp para ",
+                "chamar no whatsapp ", "ligacao do whatsapp para ")) {
+            if (normalized.startsWith(prefix)) {
+                return command(AssistantCommand.Type.WHATSAPP_CALL,
+                        stripLeadingWords(original, prefix), "", original);
+            }
+        }
+
         for (String prefix : SMS_PREFIXES) {
             if (normalized.startsWith(prefix)) {
                 String remainder = stripLeadingWords(original, prefix);
