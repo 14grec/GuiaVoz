@@ -7,4 +7,7 @@
     <string name="accessibility_settings">Ajustes de acessibilidade</string>
     <string name="typed_command_hint">Ou digite um comando para testar</string>
     <string name="status_ready">Pronto para ajudar.</string>
+    <string name="notification_settings">Ativar leitura de mensagens</string>
+    <string name="whatsapp_accessibility">Ativar controles do WhatsApp</string>
+    <string name="whatsapp_accessibility_description">Permite ao GuiaVoz tocar somente nos controles de chamada e reprodução de áudio do WhatsApp, após um comando explícito.</string>
 </resources>
