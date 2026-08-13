@@ -25,6 +25,9 @@ import br.com.exemplo.guiavoz.assistant.PhoneTextParser;
 import br.com.exemplo.guiavoz.data.ContactRepository;
 import br.com.exemplo.guiavoz.data.InstalledAppRepository;
 import br.com.exemplo.guiavoz.voice.VoiceController;
+import br.com.exemplo.guiavoz.whatsapp.WhatsAppAccessibilityService;
+import br.com.exemplo.guiavoz.whatsapp.WhatsAppMessageStore;
+import br.com.exemplo.guiavoz.whatsapp.WhatsAppNotificationService;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -39,7 +42,8 @@ public final class MainActivity extends Activity implements VoiceController.List
     private static final int REQUEST_CONTACTS = 11;
     private static final String HELP_TEXT = "Você pode dizer: abrir WhatsApp; quais aplicativos estão instalados; "
             + "ligar para Maria; enviar mensagem para João dizendo estou chegando; "
-            + "abrir mapa para Avenida Paulista; que horas são; ou abrir acessibilidade.";
+            + "abrir mapa para Avenida Paulista; ler minhas mensagens do WhatsApp; "
+            + "ligar via WhatsApp para Maria; executar o áudio do WhatsApp; ou que horas são.";
 
     private final CommandParser parser = new CommandParser();
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
@@ -65,6 +69,8 @@ public final class MainActivity extends Activity implements VoiceController.List
         findViewById(1003).setOnClickListener(view -> respond(HELP_TEXT));
         findViewById(1004).setOnClickListener(view -> execute(
                 new AssistantCommand(AssistantCommand.Type.ACCESSIBILITY_SETTINGS, "", "", "")));
+        findViewById(1005).setOnClickListener(view -> openNotificationSettings());
+        findViewById(1006).setOnClickListener(view -> openAccessibilitySettings());
 
         statusView.post(() -> respond(getString(R.string.status_ready)));
     }
@@ -121,6 +127,10 @@ public final class MainActivity extends Activity implements VoiceController.List
                 "Fala a lista de comandos disponíveis"), matchWrap());
         content.addView(button(1004, getString(R.string.accessibility_settings),
                 "Abre os ajustes de acessibilidade do Android"), matchWrap());
+        content.addView(button(1005, getString(R.string.notification_settings),
+                "Abre os ajustes para permitir a leitura de notificações do WhatsApp"), matchWrap());
+        content.addView(button(1006, getString(R.string.whatsapp_accessibility),
+                "Abre os ajustes para permitir chamadas e reprodução de áudio no WhatsApp"), matchWrap());
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -212,6 +222,9 @@ public final class MainActivity extends Activity implements VoiceController.List
             case DIAL, SMS -> resolvePhoneAction(command);
             case MAP -> openMap(command.getTarget());
             case ACCESSIBILITY_SETTINGS -> openAccessibilitySettings();
+            case WHATSAPP_MESSAGES -> readWhatsAppMessages();
+            case WHATSAPP_CALL -> resolvePhoneAction(command);
+            case PLAY_WHATSAPP_AUDIO -> playLatestWhatsAppAudio();
             case UNKNOWN -> respond("Ainda não conheço esse comando. Diga ajuda para ouvir exemplos.");
         }
     }
@@ -250,7 +263,9 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     private void completePhoneAction(AssistantCommand command, String label, String phone) {
-        if (command.getType() == AssistantCommand.Type.DIAL) {
+        if (command.getType() == AssistantCommand.Type.WHATSAPP_CALL) {
+            openWhatsAppCall(label, phone);
+        } else if (command.getType() == AssistantCommand.Type.DIAL) {
             Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
             respondAndStart("Abrindo o discador para " + label + ". Confirme a chamada no telefone.", intent);
         } else {
@@ -276,6 +291,47 @@ public final class MainActivity extends Activity implements VoiceController.List
     private void openAccessibilitySettings() {
         respondAndStart("Abrindo os ajustes de acessibilidade.",
                 new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+    }
+
+    private void openNotificationSettings() {
+        respondAndStart("Ative o acesso do GuiaVoz às notificações para ler mensagens novas do WhatsApp.",
+                new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+    }
+
+    private void readWhatsAppMessages() {
+        List<WhatsAppMessageStore.Message> messages = WhatsAppMessageStore.read(this);
+        if (messages.isEmpty()) {
+            respond("Não encontrei mensagens novas do WhatsApp. Ative a leitura de notificações e aguarde uma nova mensagem.");
+            return;
+        }
+        List<WhatsAppMessageStore.Message> recent = messages.stream().limit(8)
+                .collect(Collectors.toList());
+        String spoken = recent.stream().map(item -> item.audio
+                ? item.sender + " enviou uma mensagem de voz."
+                : item.sender + " disse: " + item.text + ".")
+                .collect(Collectors.joining(" "));
+        respond("Suas mensagens recentes do WhatsApp. " + spoken);
+    }
+
+    private void playLatestWhatsAppAudio() {
+        if (WhatsAppNotificationService.openLatestAudio()) {
+            status("Abrindo a mensagem de voz no WhatsApp. O GuiaVoz tentará reproduzi-la.");
+        } else {
+            respond("Não encontrei uma mensagem de voz recente disponível. Ative a leitura de notificações e aguarde um novo áudio.");
+        }
+    }
+
+    private void openWhatsAppCall(String label, String phone) {
+        String digits = phone.replaceAll("\\D", "");
+        if (!phone.trim().startsWith("+") && (digits.length == 10 || digits.length == 11)) {
+            digits = "55" + digits;
+        }
+        WhatsAppAccessibilityService.requestAction(WhatsAppAccessibilityService.Action.CALL);
+        Intent intent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://wa.me/" + digits));
+        intent.setPackage("com.whatsapp");
+        respondAndStart("Abrindo a conversa de " + label
+                + " no WhatsApp. O GuiaVoz tentará iniciar a chamada de voz.", intent);
     }
 
     private void openApp(String requestedApp) {
