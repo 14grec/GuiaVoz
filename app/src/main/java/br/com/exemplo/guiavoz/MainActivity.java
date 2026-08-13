@@ -323,7 +323,7 @@ public final class MainActivity extends Activity implements VoiceController.List
 
     private void openWhatsAppCall(String label, String phone) {
         String digits = phone.replaceAll("\\D", "");
-        if (!phone.trim().startsWith("+") && (digits.length == 10 || digits.length == 11)) {
+        if (!phone.trim().startsWith("+") && (digits.length() == 10 || digits.length() == 11)) {
             digits = "55" + digits;
         }
         WhatsAppAccessibilityService.requestAction(WhatsAppAccessibilityService.Action.CALL);
@@ -418,9 +418,3 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     @Override
-    protected void onDestroy() {
-        worker.shutdownNow();
-        if (voiceController != null) voiceController.destroy();
-        super.onDestroy();
-    }
-}
