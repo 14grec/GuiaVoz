@@ -42,4 +42,23 @@ public final class CommandParserTest {
         assertEquals("11987654321",
                 PhoneTextParser.extract("um um nove oito sete seis cinco quatro três dois um"));
     }
+
+    @Test
+    public void parsesWhatsAppMessages() {
+        assertEquals(AssistantCommand.Type.WHATSAPP_MESSAGES,
+                parser.parse("Leia minhas mensagens do WhatsApp").getType());
+    }
+
+    @Test
+    public void parsesWhatsAppCall() {
+        AssistantCommand command = parser.parse("Ligar via WhatsApp para Maria");
+        assertEquals(AssistantCommand.Type.WHATSAPP_CALL, command.getType());
+        assertEquals("Maria", command.getTarget());
+    }
+
+    @Test
+    public void parsesWhatsAppAudio() {
+        assertEquals(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO,
+                parser.parse("Executar o áudio do WhatsApp").getType());
+    }
 }
