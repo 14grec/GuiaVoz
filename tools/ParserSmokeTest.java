@@ -14,13 +14,19 @@ public final class ParserSmokeTest {
                 AssistantCommand.Type.DIAL, "Maria da Silva", "");
         assertCommand(parser, "Abrir mapa para Praça da Sé",
                 AssistantCommand.Type.MAP, "Praça da Sé", "");
+        assertCommand(parser, "Leia minhas mensagens do WhatsApp",
+                AssistantCommand.Type.WHATSAPP_MESSAGES, "", "");
+        assertCommand(parser, "Ligar via WhatsApp para Maria",
+                AssistantCommand.Type.WHATSAPP_CALL, "Maria", "");
+        assertCommand(parser, "Executar o áudio do WhatsApp",
+                AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "");
 
         String number = PhoneTextParser.extract(
                 "um um nove oito sete seis cinco quatro três dois um");
         if (!"11987654321".equals(number)) {
             throw new AssertionError("Número inesperado: " + number);
         }
-        System.out.println("ParserSmokeTest: 5 cenários aprovados.");
+        System.out.println("ParserSmokeTest: 8 cenários aprovados.");
     }
 
     private static void assertCommand(
