@@ -12,6 +12,9 @@ public final class AssistantCommand {
         SMS,
         MAP,
         ACCESSIBILITY_SETTINGS,
+        WHATSAPP_MESSAGES,
+        WHATSAPP_CALL,
+        PLAY_WHATSAPP_AUDIO,
         UNKNOWN
     }
 
