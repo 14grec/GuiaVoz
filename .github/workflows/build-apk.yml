@@ -47,14 +47,14 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publicar versão 0.2.1
+      - name: Publicar versão 0.2.2
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v0.2.1 >/dev/null 2>&1 || \
-            gh release create v0.2.1 \
-              --title "GuiaVoz 0.2.1" \
+          gh release view v0.2.2 >/dev/null 2>&1 || \
+            gh release create v0.2.2 \
+              --title "GuiaVoz 0.2.2" \
               --notes "Corrige o fluxo de ligação do WhatsApp: abre diretamente a conversa pelo número, inicia o prazo no momento correto e trata a confirmação da chamada."
-          gh release upload v0.2.1 \
-            "app/build/outputs/apk/debug/app-debug.apk#GuiaVoz-v0.2.1.apk" \
+          gh release upload v0.2.2 \
+            "app/build/outputs/apk/debug/app-debug.apk#GuiaVoz-v0.2.2.apk" \
             --clobber
