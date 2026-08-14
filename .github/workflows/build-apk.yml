@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -43,3 +43,14 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Publicar versão 0.2.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v0.2.0 >/dev/null 2>&1 || \
+            gh release create v0.2.0 \
+              --title "GuiaVoz 0.2.0" \
+              --notes "Versão de teste com leitura de notificações, ligação e reprodução assistida de áudios do WhatsApp comum em português do Brasil."
+          gh release upload v0.2.0 \
+            "app/build/outputs/apk/debug/app-debug.apk#GuiaVoz-v0.2.0.apk" \
+            --clobber
