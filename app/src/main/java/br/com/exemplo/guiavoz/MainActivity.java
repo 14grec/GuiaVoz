@@ -326,12 +326,22 @@ public final class MainActivity extends Activity implements VoiceController.List
         if (!phone.trim().startsWith("+") && (digits.length() == 10 || digits.length() == 11)) {
             digits = "55" + digits;
         }
-        WhatsAppAccessibilityService.requestAction(WhatsAppAccessibilityService.Action.CALL);
+        if (digits.length() < 10) {
+            respond("O número de " + label + " parece incompleto.");
+            return;
+        }
         Intent intent = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://wa.me/" + digits));
+                Uri.parse("whatsapp://send?phone=" + digits));
         intent.setPackage("com.whatsapp");
-        respondAndStart("Abrindo a conversa de " + label
-                + " no WhatsApp. O GuiaVoz tentará iniciar a chamada de voz.", intent);
+        String message = "Abrindo diretamente a conversa de " + label
+                + " no WhatsApp para iniciar a chamada de voz.";
+        status(message);
+        voiceController.speakThen(message, () -> runOnUiThread(() -> {
+            // O prazo começa apenas quando o WhatsApp será aberto, não durante a fala.
+            WhatsAppAccessibilityService.requestAction(
+                    WhatsAppAccessibilityService.Action.CALL);
+            safeStart(intent);
+        }));
     }
 
     private void openApp(String requestedApp) {
