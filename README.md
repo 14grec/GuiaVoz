@@ -2,7 +2,7 @@
 
 Protótipo nativo em Java para testar uma interface por voz voltada a pessoas com deficiência visual. O app reconhece comandos em português do Brasil, responde por síntese de fala e delega ações a outros apps com `Intent`.
 
-## Versão 0.2.1 — WhatsApp assistido
+## Versão 0.2.2 — WhatsApp assistido
 
 - “Leia minhas mensagens do WhatsApp”: lê até oito mensagens novas capturadas pelas notificações.
 - “Ligar via WhatsApp para Maria”: resolve o número no catálogo do Android, abre diretamente a conversa pelo número e aciona a chamada de voz, incluindo a confirmação quando ela aparecer.
