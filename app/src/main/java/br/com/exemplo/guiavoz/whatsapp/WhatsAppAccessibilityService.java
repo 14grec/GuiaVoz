@@ -14,9 +14,10 @@ import java.util.Locale;
 import java.util.Queue;
 
 public final class WhatsAppAccessibilityService extends AccessibilityService {
-    public enum Action { NONE, CALL, PLAY_AUDIO }
+    public enum Action { NONE, CALL, CONFIRM_CALL, PLAY_AUDIO }
 
-    private static final long ACTION_TIMEOUT_MS = 12_000;
+    private static final long ACTION_TIMEOUT_MS = 20_000;
+    private static final long CALL_CONFIRMATION_TIMEOUT_MS = 4_000;
     private static volatile Action pendingAction = Action.NONE;
     private static volatile long actionExpiresAt;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -51,17 +52,35 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
         if (pendingAction != action) return;
         AccessibilityNodeInfo root = getRootInActiveWindow();
         if (root == null) return;
-        List<String> labels = action == Action.CALL
-                ? Arrays.asList("Ligação de voz", "Chamada de voz", "Ligar")
-                : Arrays.asList("Reproduzir mensagem de voz", "Reproduzir áudio", "Reproduzir audio", "Reproduzir");
+        List<String> labels;
+        if (action == Action.CALL) {
+            labels = Arrays.asList("Ligação de voz", "Chamada de voz", "Fazer ligação de voz");
+        } else if (action == Action.CONFIRM_CALL) {
+            labels = Arrays.asList("Ligar", "Chamar", "Iniciar");
+        } else {
+            labels = Arrays.asList("Reproduzir mensagem de voz", "Reproduzir áudio", "Reproduzir audio", "Reproduzir");
+        }
         AccessibilityNodeInfo target = findClickable(root, labels);
         if (target == null) return;
         if (target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-            pendingAction = Action.NONE;
-            speak(action == Action.CALL
-                    ? "Chamada de voz iniciada no WhatsApp."
-                    : "Reproduzindo a mensagem de voz.");
+            if (action == Action.CALL) {
+                pendingAction = Action.CONFIRM_CALL;
+                actionExpiresAt = System.currentTimeMillis() + CALL_CONFIRMATION_TIMEOUT_MS;
+                handler.postDelayed(this::finishCallWithoutConfirmation,
+                        CALL_CONFIRMATION_TIMEOUT_MS);
+            } else {
+                pendingAction = Action.NONE;
+                speak(action == Action.CONFIRM_CALL
+                        ? "Chamada de voz iniciada no WhatsApp."
+                        : "Reproduzindo a mensagem de voz.");
+            }
         }
+    }
+
+    private void finishCallWithoutConfirmation() {
+        if (pendingAction != Action.CONFIRM_CALL) return;
+        pendingAction = Action.NONE;
+        speak("Chamada de voz solicitada no WhatsApp.");
     }
 
     private AccessibilityNodeInfo findClickable(AccessibilityNodeInfo root, List<String> labels) {
