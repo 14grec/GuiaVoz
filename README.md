@@ -2,13 +2,18 @@
 
 Protótipo nativo em Java para testar uma interface por voz voltada a pessoas com deficiência visual. O app reconhece comandos em português do Brasil, responde por síntese de fala e delega ações a outros apps com `Intent`.
 
-## Versão 0.2.2 — WhatsApp assistido
+## Versão 0.3.0 — interação rápida e interface renovada
 
-- “Leia minhas mensagens do WhatsApp”: lê até oito mensagens novas capturadas pelas notificações.
-- “Ligar via WhatsApp para Maria”: resolve o número no catálogo do Android, abre diretamente a conversa pelo número e aciona a chamada de voz, incluindo a confirmação quando ela aparecer.
-- “Executar o áudio do WhatsApp”: abre a última notificação de mensagem de voz e tenta tocar em **Reproduzir**.
+- Respostas faladas curtas, TTS mais rápido e status detalhado somente na tela.
+- Parser por famílias de verbos: entende **ouvir**, **escutar**, **tocar**, **reproduzir** e **executar**.
+- “Ouvir minhas mensagens”: lê até quatro mensagens e reproduz o áudio recente sem sobrepor a voz do GuiaVoz.
+- “Reproduzir áudios do WhatsApp”: abre a última mensagem de voz e toca em **Reproduzir**.
+- “Ligar para Maria no WhatsApp”: procura primeiro nas conversas recentes e depois nos contatos do Android.
+- “Pausar música”, “Continuar música” e “Próxima faixa”: controla uma sessão de mídia ativa em segundo plano.
+- Opção para bloquear a tela depois que o áudio do WhatsApp começar.
+- Nova interface em cartões, alto contraste, áreas de toque grandes e ações rápidas.
 
-Na primeira execução, use os botões **Ativar leitura de mensagens** e **Ativar controles do WhatsApp**. O Android exige que a pessoa habilite manualmente os dois serviços. O serviço de acessibilidade é restrito a `com.whatsapp`, só executa uma ação após comando explícito e cancela a ação se o WhatsApp não responder dentro do prazo.
+Na primeira execução, use **Acesso às notificações** e **Controle do WhatsApp**. O Android exige que a pessoa habilite manualmente os dois serviços. O serviço de acessibilidade é restrito a `com.whatsapp`, só executa uma ação após comando explícito e cancela a ação se o WhatsApp não responder dentro do prazo.
 
 O WhatsApp não oferece API pública para histórico, chamadas ou reprodução de áudios. A leitura cobre apenas notificações recebidas após a ativação. Chamada e áudio dependem dos rótulos da interface em português do Brasil e podem precisar de ajustes quando o WhatsApp mudar.
 
@@ -41,6 +46,12 @@ O Android pode solicitar autorização para instalar aplicativos desta fonte. Es
 - “Ajuda”
 - “Que horas são?”
 - “Abrir WhatsApp”
+- “Ouvir minhas mensagens”
+- “Reproduzir áudios do WhatsApp”
+- “Escute a mensagem de voz do zap”
+- “Ligar para Maria no WhatsApp”
+- “Pausar música”
+- “Próxima faixa”
 - “Quais aplicativos estão instalados?”
 - “Ligar para Maria”
 - “Ligar para 11 99999 1234”
@@ -66,7 +77,7 @@ Controlar elementos de tela de terceiros exigiria um `AccessibilityService`. Iss
 
 ## Segurança e privacidade
 
-- O reconhecimento é iniciado somente por toque e pode usar o serviço de voz configurado no aparelho.
+- Nesta versão, o reconhecimento ainda é iniciado por toque e pode usar o serviço de voz configurado no aparelho.
 - Contatos são lidos somente no dispositivo e apenas para resolver o comando atual.
 - O app não faz chamada direta e não envia mensagem sozinho: abre o app apropriado para revisão e confirmação.
 - Não há coleta, servidor próprio, analytics ou armazenamento do áudio/transcrição neste protótipo.
