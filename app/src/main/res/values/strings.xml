@@ -1,13 +1,13 @@
 <resources>
     <string name="app_name">GuiaVoz</string>
-    <string name="intro">Assistente por voz. Toque em Ouvir comando e fale depois do sinal.</string>
-    <string name="listen">Ouvir comando</string>
-    <string name="run_text">Executar texto</string>
-    <string name="help">Ouvir ajuda</string>
+    <string name="intro">Comandos rápidos, respostas curtas e navegação sem depender da visão.</string>
+    <string name="listen">Falar agora</string>
+    <string name="run_text">Executar comando</string>
+    <string name="help">Exemplos de comandos</string>
     <string name="accessibility_settings">Ajustes de acessibilidade</string>
-    <string name="typed_command_hint">Ou digite um comando para testar</string>
+    <string name="typed_command_hint">Digite um comando</string>
     <string name="status_ready">Pronto para ajudar.</string>
-    <string name="notification_settings">Ativar leitura de mensagens</string>
-    <string name="whatsapp_accessibility">Ativar controles do WhatsApp</string>
+    <string name="notification_settings">Acesso às notificações</string>
+    <string name="whatsapp_accessibility">Controle do WhatsApp</string>
     <string name="whatsapp_accessibility_description">Permite ao GuiaVoz tocar somente nos controles de chamada e reprodução de áudio do WhatsApp, após um comando explícito.</string>
 </resources>
