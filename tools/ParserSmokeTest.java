@@ -20,13 +20,23 @@ public final class ParserSmokeTest {
                 AssistantCommand.Type.WHATSAPP_CALL, "Maria", "");
         assertCommand(parser, "Executar o áudio do WhatsApp",
                 AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "");
+        assertCommand(parser, "Reproduzir áudios do WhatsApp",
+                AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "");
+        assertCommand(parser, "Ouvir minhas mensagens do Whats",
+                AssistantCommand.Type.WHATSAPP_LISTEN_MESSAGES, "", "");
+        assertCommand(parser, "Ligar para Maria no WhatsApp",
+                AssistantCommand.Type.WHATSAPP_CALL, "Maria", "");
+        assertCommand(parser, "Pausar música",
+                AssistantCommand.Type.MEDIA_PAUSE, "", "");
+        assertCommand(parser, "Próxima faixa",
+                AssistantCommand.Type.MEDIA_NEXT, "", "");
 
         String number = PhoneTextParser.extract(
                 "um um nove oito sete seis cinco quatro três dois um");
         if (!"11987654321".equals(number)) {
             throw new AssertionError("Número inesperado: " + number);
         }
-        System.out.println("ParserSmokeTest: 8 cenários aprovados.");
+        System.out.println("ParserSmokeTest: 13 cenários aprovados.");
     }
 
     private static void assertCommand(
