@@ -61,4 +61,37 @@ public final class CommandParserTest {
         assertEquals(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO,
                 parser.parse("Executar o áudio do WhatsApp").getType());
     }
+
+    @Test
+    public void parsesPluralWhatsAppAudioWithDifferentVerb() {
+        assertEquals(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO,
+                parser.parse("Reproduzir áudios do WhatsApp").getType());
+        assertEquals(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO,
+                parser.parse("Escute a mensagem de voz do zap").getType());
+    }
+
+    @Test
+    public void distinguishesReadingFromListeningToMessages() {
+        assertEquals(AssistantCommand.Type.WHATSAPP_MESSAGES,
+                parser.parse("Leia minhas mensagens").getType());
+        assertEquals(AssistantCommand.Type.WHATSAPP_LISTEN_MESSAGES,
+                parser.parse("Ouvir minhas mensagens do Whats").getType());
+    }
+
+    @Test
+    public void parsesWhatsAppCallWithAppAtEnd() {
+        AssistantCommand command = parser.parse("Ligar para Maria no WhatsApp");
+        assertEquals(AssistantCommand.Type.WHATSAPP_CALL, command.getType());
+        assertEquals("Maria", command.getTarget());
+    }
+
+    @Test
+    public void parsesBackgroundMediaCommands() {
+        assertEquals(AssistantCommand.Type.MEDIA_PAUSE,
+                parser.parse("Pausar música").getType());
+        assertEquals(AssistantCommand.Type.MEDIA_NEXT,
+                parser.parse("Próxima faixa").getType());
+        assertEquals(AssistantCommand.Type.MEDIA_PLAY,
+                parser.parse("Continuar música").getType());
+    }
 }
