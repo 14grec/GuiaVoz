@@ -4,18 +4,19 @@
 
 1. `VoiceController` inicia o reconhecimento e entrega a melhor transcrição.
 2. `CommandParser` converte a frase em um comando tipado.
-3. `MainActivity` solicita a permissão mínima no momento de uso.
+3. `MainActivity` solicita a permissão mínima no momento de uso e mantém somente a interface de teste.
 4. `ContactRepository` ou `InstalledAppRepository` resolve o alvo.
 5. Uma `Intent` abre o app responsável, mantendo a confirmação final com a pessoa.
-6. O resultado e os erros são apresentados em texto grande e por voz.
+6. O resultado visual pode ser detalhado, mas a resposta falada segue uma política curta.
+7. `MediaActionController` controla sessões de mídia ativas sem abrir o aplicativo quando possível.
 
 ## Decisões de acessibilidade
 
 - Uma ação principal grande e central para reduzir a precisão motora exigida.
 - Alto contraste e textos grandes.
-- Rótulos completos, descrições de conteúdo e região de status anunciável.
+- Rótulos completos e descrições de conteúdo, sem duplicar o status pelo TalkBack e pelo TTS.
 - Alternativa digitada para desenvolvimento, ambientes ruidosos e testes.
-- Erros falados com orientação de recuperação.
+- Erros falados em uma frase curta e acionável.
 - Nenhuma ação financeira, envio ou chamada é confirmada silenciosamente.
 
 ## Integração com terceiros
@@ -30,6 +31,8 @@ Há três níveis possíveis:
 
 ## Próximas fases recomendadas
 
+- Extrair o roteador de comandos da `MainActivity` para um serviço reutilizável.
+- Tornar o GuiaVoz selecionável como assistente padrão com `VoiceInteractionService`.
 - Confirmação conversacional para contatos ou apps ambíguos.
 - Reconhecimento de voz offline quando disponível no dispositivo.
 - Catálogo de adaptadores para deep links documentados.
