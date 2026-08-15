@@ -13,8 +13,12 @@ public final class AssistantCommand {
         MAP,
         ACCESSIBILITY_SETTINGS,
         WHATSAPP_MESSAGES,
+        WHATSAPP_LISTEN_MESSAGES,
         WHATSAPP_CALL,
         PLAY_WHATSAPP_AUDIO,
+        MEDIA_PLAY,
+        MEDIA_PAUSE,
+        MEDIA_NEXT,
         UNKNOWN
     }
 
