@@ -56,7 +56,7 @@ public final class VoiceController implements RecognitionListener, TextToSpeech.
             int availability = textToSpeech.setLanguage(new Locale("pt", "BR"));
             ttsReady = availability != TextToSpeech.LANG_MISSING_DATA
                     && availability != TextToSpeech.LANG_NOT_SUPPORTED;
-            textToSpeech.setSpeechRate(0.92f);
+            textToSpeech.setSpeechRate(1.22f);
         }
     }
 
@@ -87,6 +87,11 @@ public final class VoiceController implements RecognitionListener, TextToSpeech.
         }
     }
 
+    public void stopSpeaking() {
+        completionActions.clear();
+        textToSpeech.stop();
+    }
+
     public void speakThen(String text, Runnable completion) {
         if (!ttsReady || text == null || text.trim().isEmpty()) {
             completion.run();
@@ -115,15 +120,15 @@ public final class VoiceController implements RecognitionListener, TextToSpeech.
     }
 
     @Override public void onReadyForSpeech(Bundle params) {
-        listener.onListeningState("Pode falar. Estou ouvindo.");
+        listener.onListeningState("Pode falar.");
     }
 
     @Override public void onBeginningOfSpeech() {
-        listener.onListeningState("Ouvindo seu comando…");
+        listener.onListeningState("Ouvindo…");
     }
 
     @Override public void onEndOfSpeech() {
-        listener.onListeningState("Processando o comando…");
+        listener.onListeningState("Processando…");
     }
 
     @Override public void onError(int error) {
@@ -133,7 +138,7 @@ public final class VoiceController implements RecognitionListener, TextToSpeech.
     @Override public void onResults(Bundle results) {
         ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         if (matches == null || matches.isEmpty()) {
-            listener.onVoiceError("Não entendi. Toque em ouvir e tente novamente.");
+            listener.onVoiceError("Não entendi. Tente novamente.");
             return;
         }
         listener.onRecognized(matches.get(0));
@@ -149,12 +154,12 @@ public final class VoiceController implements RecognitionListener, TextToSpeech.
             case SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
                     "O serviço de voz está sem conexão. Tente novamente.";
             case SpeechRecognizer.ERROR_NO_MATCH ->
-                    "Não entendi. Fale mais perto do microfone e tente novamente.";
+                    "Não entendi. Tente novamente.";
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY ->
-                    "O reconhecedor está ocupado. Aguarde um instante e tente novamente.";
+                    "O reconhecedor está ocupado.";
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
-                    "Não ouvi nenhuma fala. Toque em ouvir para tentar novamente.";
-            default -> "Não foi possível reconhecer a fala. Tente novamente.";
+                    "Não ouvi nada.";
+            default -> "Não consegui reconhecer.";
         };
     }
 
