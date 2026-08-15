@@ -3,6 +3,7 @@ package br.com.exemplo.guiavoz.whatsapp;
 import android.accessibilityservice.AccessibilityService;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -14,6 +15,8 @@ import java.util.Locale;
 import java.util.Queue;
 
 public final class WhatsAppAccessibilityService extends AccessibilityService {
+    public static final String PREFERENCES = "guiavoz_preferences";
+    public static final String LOCK_SCREEN_AFTER_AUDIO = "lock_screen_after_audio";
     public enum Action { NONE, CALL, CONFIRM_CALL, PLAY_AUDIO }
 
     private static final long ACTION_TIMEOUT_MS = 20_000;
@@ -31,7 +34,10 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         tts = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) tts.setLanguage(new Locale("pt", "BR"));
+            if (status == TextToSpeech.SUCCESS) {
+                tts.setLanguage(new Locale("pt", "BR"));
+                tts.setSpeechRate(1.22f);
+            }
         });
     }
 
@@ -70,17 +76,26 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
                         CALL_CONFIRMATION_TIMEOUT_MS);
             } else {
                 pendingAction = Action.NONE;
-                speak(action == Action.CONFIRM_CALL
-                        ? "Chamada de voz iniciada no WhatsApp."
-                        : "Reproduzindo a mensagem de voz.");
+                if (action == Action.CONFIRM_CALL) {
+                    speak("Chamada iniciada.");
+                } else {
+                    lockScreenAfterAudioIfEnabled();
+                }
             }
         }
+    }
+
+    private void lockScreenAfterAudioIfEnabled() {
+        boolean enabled = getSharedPreferences(PREFERENCES, MODE_PRIVATE)
+                .getBoolean(LOCK_SCREEN_AFTER_AUDIO, true);
+        if (!enabled || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+        handler.postDelayed(() -> performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN), 900);
     }
 
     private void finishCallWithoutConfirmation() {
         if (pendingAction != Action.CONFIRM_CALL) return;
         pendingAction = Action.NONE;
-        speak("Chamada de voz solicitada no WhatsApp.");
+        speak("Chamada solicitada.");
     }
 
     private AccessibilityNodeInfo findClickable(AccessibilityNodeInfo root, List<String> labels) {
