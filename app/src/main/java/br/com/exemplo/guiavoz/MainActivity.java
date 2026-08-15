@@ -6,17 +6,18 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityEvent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import br.com.exemplo.guiavoz.assistant.AssistantCommand;
@@ -24,6 +25,7 @@ import br.com.exemplo.guiavoz.assistant.CommandParser;
 import br.com.exemplo.guiavoz.assistant.PhoneTextParser;
 import br.com.exemplo.guiavoz.data.ContactRepository;
 import br.com.exemplo.guiavoz.data.InstalledAppRepository;
+import br.com.exemplo.guiavoz.media.MediaActionController;
 import br.com.exemplo.guiavoz.voice.VoiceController;
 import br.com.exemplo.guiavoz.whatsapp.WhatsAppAccessibilityService;
 import br.com.exemplo.guiavoz.whatsapp.WhatsAppMessageStore;
@@ -40,20 +42,26 @@ import java.util.stream.Collectors;
 public final class MainActivity extends Activity implements VoiceController.Listener {
     private static final int REQUEST_MICROPHONE = 10;
     private static final int REQUEST_CONTACTS = 11;
-    private static final String HELP_TEXT = "Você pode dizer: abrir WhatsApp; quais aplicativos estão instalados; "
-            + "ligar para Maria; enviar mensagem para João dizendo estou chegando; "
-            + "abrir mapa para Avenida Paulista; ler minhas mensagens do WhatsApp; "
-            + "ligar via WhatsApp para Maria; executar o áudio do WhatsApp; ou que horas são.";
+    private static final String HELP_TEXT = "Diga: ouvir mensagens, reproduzir áudios do WhatsApp, "
+            + "ligar para Maria no WhatsApp, abrir Spotify, pausar música ou que horas são.";
+    private static final int COLOR_BACKGROUND = Color.rgb(244, 247, 249);
+    private static final int COLOR_SURFACE = Color.WHITE;
+    private static final int COLOR_PRIMARY = Color.rgb(14, 91, 103);
+    private static final int COLOR_PRIMARY_DARK = Color.rgb(15, 42, 51);
+    private static final int COLOR_ACCENT = Color.rgb(31, 138, 112);
+    private static final int COLOR_TEXT_MUTED = Color.rgb(78, 96, 104);
 
     private final CommandParser parser = new CommandParser();
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private VoiceController voiceController;
     private ContactRepository contactRepository;
     private InstalledAppRepository appRepository;
+    private MediaActionController mediaController;
     private TextView statusView;
     private TextView transcriptView;
     private EditText commandInput;
     private Button listenButton;
+    private Switch lockScreenSwitch;
     private AssistantCommand pendingContactCommand;
 
     @Override
@@ -62,78 +70,120 @@ public final class MainActivity extends Activity implements VoiceController.List
         setContentView(createInterface());
         contactRepository = new ContactRepository(getContentResolver());
         appRepository = new InstalledAppRepository(this);
+        mediaController = new MediaActionController(this);
         voiceController = new VoiceController(this, this);
 
         listenButton.setOnClickListener(view -> startVoiceCommand());
         findViewById(1002).setOnClickListener(view -> runTypedCommand());
         findViewById(1003).setOnClickListener(view -> respond(HELP_TEXT));
-        findViewById(1004).setOnClickListener(view -> execute(
-                new AssistantCommand(AssistantCommand.Type.ACCESSIBILITY_SETTINGS, "", "", "")));
         findViewById(1005).setOnClickListener(view -> openNotificationSettings());
         findViewById(1006).setOnClickListener(view -> openAccessibilitySettings());
+        findViewById(1010).setOnClickListener(view -> execute(
+                new AssistantCommand(AssistantCommand.Type.WHATSAPP_LISTEN_MESSAGES, "", "", "")));
+        findViewById(1011).setOnClickListener(view -> execute(
+                new AssistantCommand(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "", "")));
+        lockScreenSwitch.setOnCheckedChangeListener((button, enabled) ->
+                getSharedPreferences(WhatsAppAccessibilityService.PREFERENCES, MODE_PRIVATE)
+                        .edit().putBoolean(WhatsAppAccessibilityService.LOCK_SCREEN_AFTER_AUDIO,
+                                enabled).apply());
 
-        statusView.post(() -> respond(getString(R.string.status_ready)));
+        statusView.post(() -> status(getString(R.string.status_ready)));
     }
 
     private View createInterface() {
-        int padding = dp(24);
+        int padding = dp(18);
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setGravity(Gravity.CENTER_HORIZONTAL);
         content.setPadding(padding, padding, padding, padding);
-        content.setBackgroundColor(Color.WHITE);
+        content.setBackgroundColor(COLOR_BACKGROUND);
 
-        TextView title = text("GuiaVoz", 34, Color.BLACK);
-        title.setGravity(Gravity.CENTER);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        TextView badge = text("ASSISTENTE ACESSÍVEL", 13, COLOR_ACCENT);
+        badge.setTypeface(null, Typeface.BOLD);
+        badge.setLetterSpacing(0.08f);
+        content.addView(badge, matchWrap());
+
+        TextView title = text("GuiaVoz", 36, COLOR_PRIMARY_DARK);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setPadding(0, dp(4), 0, 0);
         content.addView(title, matchWrap());
 
-        TextView intro = text(getString(R.string.intro), 20, Color.BLACK);
-        intro.setGravity(Gravity.CENTER);
-        intro.setPadding(0, dp(12), 0, dp(20));
+        TextView intro = text(getString(R.string.intro), 18, COLOR_TEXT_MUTED);
+        intro.setPadding(0, dp(4), 0, dp(18));
         content.addView(intro, matchWrap());
 
         listenButton = button(1001, getString(R.string.listen), "Inicia o reconhecimento de voz");
-        listenButton.setTextSize(25);
-        listenButton.setMinHeight(dp(88));
-        listenButton.setBackgroundColor(Color.rgb(18, 70, 160));
+        listenButton.setTextSize(23);
+        listenButton.setTypeface(null, Typeface.BOLD);
+        listenButton.setMinHeight(dp(76));
+        listenButton.setBackground(rounded(COLOR_PRIMARY, 20, 0, Color.TRANSPARENT));
         listenButton.setTextColor(Color.WHITE);
         content.addView(listenButton, matchWrap());
 
-        statusView = text(getString(R.string.status_ready), 21, Color.rgb(20, 20, 20));
-        statusView.setGravity(Gravity.CENTER);
-        statusView.setPadding(0, dp(20), 0, dp(12));
-        statusView.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        content.addView(statusView, matchWrap());
+        LinearLayout statusCard = card();
+        statusCard.addView(sectionLabel("STATUS"), matchWrap());
+        statusView = text(getString(R.string.status_ready), 22, COLOR_PRIMARY_DARK);
+        statusView.setTypeface(null, Typeface.BOLD);
+        statusView.setPadding(0, dp(6), 0, 0);
+        statusView.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_NONE);
+        statusCard.addView(statusView, matchWrap());
 
-        transcriptView = text("Último comando: nenhum", 18, Color.DKGRAY);
-        transcriptView.setGravity(Gravity.CENTER);
-        transcriptView.setPadding(0, 0, 0, dp(20));
-        content.addView(transcriptView, matchWrap());
+        transcriptView = text("Último comando: nenhum", 17, COLOR_TEXT_MUTED);
+        transcriptView.setPadding(0, dp(8), 0, 0);
+        statusCard.addView(transcriptView, matchWrap());
+        content.addView(statusCard, cardParams());
+
+        LinearLayout quickCard = card();
+        quickCard.addView(sectionTitle("Ações rápidas"), matchWrap());
+        quickCard.addView(secondaryButton(1010, "Ouvir mensagens",
+                "Lê textos e reproduz o áudio mais recente"), matchWrap());
+        quickCard.addView(secondaryButton(1011, "Reproduzir último áudio",
+                "Reproduz o áudio mais recente do WhatsApp"), matchWrap());
+        content.addView(quickCard, cardParams());
+
+        LinearLayout testCard = card();
+        testCard.addView(sectionTitle("Testar por texto"), matchWrap());
 
         commandInput = new EditText(this);
         commandInput.setTextSize(19);
-        commandInput.setTextColor(Color.BLACK);
-        commandInput.setHintTextColor(Color.DKGRAY);
+        commandInput.setTextColor(COLOR_PRIMARY_DARK);
+        commandInput.setHintTextColor(COLOR_TEXT_MUTED);
         commandInput.setHint(getString(R.string.typed_command_hint));
         commandInput.setSingleLine(false);
         commandInput.setMinHeight(dp(64));
+        commandInput.setPadding(dp(16), dp(12), dp(16), dp(12));
+        commandInput.setBackground(rounded(Color.rgb(242, 246, 247), 14, 1,
+                Color.rgb(205, 216, 220)));
         commandInput.setContentDescription("Campo para digitar um comando de teste");
-        content.addView(commandInput, matchWrap());
+        testCard.addView(commandInput, matchWrap());
 
-        content.addView(button(1002, getString(R.string.run_text),
+        testCard.addView(secondaryButton(1002, getString(R.string.run_text),
                 "Executa o comando digitado"), matchWrap());
-        content.addView(button(1003, getString(R.string.help),
-                "Fala a lista de comandos disponíveis"), matchWrap());
-        content.addView(button(1004, getString(R.string.accessibility_settings),
-                "Abre os ajustes de acessibilidade do Android"), matchWrap());
-        content.addView(button(1005, getString(R.string.notification_settings),
-                "Abre os ajustes para permitir a leitura de notificações do WhatsApp"), matchWrap());
-        content.addView(button(1006, getString(R.string.whatsapp_accessibility),
-                "Abre os ajustes para permitir chamadas e reprodução de áudio no WhatsApp"), matchWrap());
+        content.addView(testCard, cardParams());
+
+        LinearLayout settingsCard = card();
+        settingsCard.addView(sectionTitle("Acessos e preferências"), matchWrap());
+        lockScreenSwitch = new Switch(this);
+        lockScreenSwitch.setText("Bloquear tela ao reproduzir áudio");
+        lockScreenSwitch.setTextSize(18);
+        lockScreenSwitch.setTextColor(COLOR_PRIMARY_DARK);
+        lockScreenSwitch.setMinHeight(dp(56));
+        lockScreenSwitch.setChecked(getSharedPreferences(
+                WhatsAppAccessibilityService.PREFERENCES, MODE_PRIVATE)
+                .getBoolean(WhatsAppAccessibilityService.LOCK_SCREEN_AFTER_AUDIO, true));
+        lockScreenSwitch.setContentDescription(
+                "Bloquear a tela depois que um áudio do WhatsApp começar");
+        settingsCard.addView(lockScreenSwitch, matchWrap());
+        settingsCard.addView(secondaryButton(1005, getString(R.string.notification_settings),
+                "Permite ler notificações do WhatsApp"), matchWrap());
+        settingsCard.addView(secondaryButton(1006, getString(R.string.whatsapp_accessibility),
+                "Permite controlar chamadas e áudios do WhatsApp"), matchWrap());
+        settingsCard.addView(secondaryButton(1003, getString(R.string.help),
+                "Fala exemplos de comandos"), matchWrap());
+        content.addView(settingsCard, cardParams());
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
+        scroll.setBackgroundColor(COLOR_BACKGROUND);
         scroll.addView(content);
         return scroll;
     }
@@ -150,7 +200,7 @@ public final class MainActivity extends Activity implements VoiceController.List
         Button button = new Button(this);
         button.setId(id);
         button.setText(label);
-        button.setTextSize(19);
+        button.setTextSize(18);
         button.setAllCaps(false);
         button.setMinHeight(dp(64));
         button.setContentDescription(description);
@@ -158,6 +208,51 @@ public final class MainActivity extends Activity implements VoiceController.List
         params.topMargin = dp(10);
         button.setLayoutParams(params);
         return button;
+    }
+
+    private Button secondaryButton(int id, String label, String description) {
+        Button result = button(id, label, description);
+        result.setTextColor(COLOR_PRIMARY);
+        result.setBackground(rounded(Color.rgb(238, 247, 246), 14, 1,
+                Color.rgb(174, 211, 203)));
+        return result;
+    }
+
+    private LinearLayout card() {
+        LinearLayout result = new LinearLayout(this);
+        result.setOrientation(LinearLayout.VERTICAL);
+        result.setPadding(dp(18), dp(16), dp(18), dp(18));
+        result.setBackground(rounded(COLOR_SURFACE, 20, 1, Color.rgb(224, 231, 234)));
+        result.setElevation(dp(2));
+        return result;
+    }
+
+    private LinearLayout.LayoutParams cardParams() {
+        LinearLayout.LayoutParams params = matchWrap();
+        params.topMargin = dp(14);
+        return params;
+    }
+
+    private TextView sectionLabel(String value) {
+        TextView result = text(value, 12, COLOR_ACCENT);
+        result.setTypeface(null, Typeface.BOLD);
+        result.setLetterSpacing(0.08f);
+        return result;
+    }
+
+    private TextView sectionTitle(String value) {
+        TextView result = text(value, 21, COLOR_PRIMARY_DARK);
+        result.setTypeface(null, Typeface.BOLD);
+        result.setPadding(0, 0, 0, dp(4));
+        return result;
+    }
+
+    private GradientDrawable rounded(int color, int radiusDp, int strokeDp, int strokeColor) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(color);
+        drawable.setCornerRadius(dp(radiusDp));
+        if (strokeDp > 0) drawable.setStroke(dp(strokeDp), strokeColor);
+        return drawable;
     }
 
     private LinearLayout.LayoutParams matchWrap() {
@@ -222,11 +317,34 @@ public final class MainActivity extends Activity implements VoiceController.List
             case DIAL, SMS -> resolvePhoneAction(command);
             case MAP -> openMap(command.getTarget());
             case ACCESSIBILITY_SETTINGS -> openAccessibilitySettings();
-            case WHATSAPP_MESSAGES -> readWhatsAppMessages();
-            case WHATSAPP_CALL -> resolvePhoneAction(command);
+            case WHATSAPP_MESSAGES -> readWhatsAppMessages(false);
+            case WHATSAPP_LISTEN_MESSAGES -> readWhatsAppMessages(true);
+            case WHATSAPP_CALL -> callWhatsApp(command);
             case PLAY_WHATSAPP_AUDIO -> playLatestWhatsAppAudio();
-            case UNKNOWN -> respond("Ainda não conheço esse comando. Diga ajuda para ouvir exemplos.");
+            case MEDIA_PLAY -> controlMedia(MediaActionController.Action.PLAY);
+            case MEDIA_PAUSE -> controlMedia(MediaActionController.Action.PAUSE);
+            case MEDIA_NEXT -> controlMedia(MediaActionController.Action.NEXT);
+            case UNKNOWN -> respond("Não entendi. Diga ajuda para ouvir exemplos.");
         }
+    }
+
+    private void callWhatsApp(AssistantCommand command) {
+        String target = command.getTarget().trim();
+        if (target.isEmpty()) {
+            respond("Para quem?");
+            return;
+        }
+        if (WhatsAppNotificationService.hasRecentConversation(target)) {
+            String message = "Ligando para " + target + ".";
+            status(message);
+            voiceController.speakThen(message, () -> {
+                if (!WhatsAppNotificationService.openRecentConversation(target)) {
+                    runOnUiThread(() -> resolvePhoneAction(command));
+                }
+            });
+            return;
+        }
+        resolvePhoneAction(command);
     }
 
     private void resolvePhoneAction(AssistantCommand command) {
@@ -245,7 +363,7 @@ public final class MainActivity extends Activity implements VoiceController.List
             return;
         }
 
-        status("Procurando o contato " + command.getTarget() + "…");
+        status("Procurando " + command.getTarget() + "…");
         worker.execute(() -> {
             ContactRepository.Match match = contactRepository.findByName(command.getTarget());
             runOnUiThread(() -> handleContactMatch(command, match));
@@ -255,7 +373,10 @@ public final class MainActivity extends Activity implements VoiceController.List
     private void handleContactMatch(AssistantCommand command, ContactRepository.Match match) {
         switch (match.status) {
             case FOUND -> completePhoneAction(command, match.displayName, match.phoneNumber);
-            case NOT_FOUND -> respond("Não encontrei o contato " + command.getTarget() + ".");
+            case NOT_FOUND -> respond(command.getType() == AssistantCommand.Type.WHATSAPP_CALL
+                    ? "Não encontrei " + command.getTarget()
+                            + " nas conversas recentes nem nos contatos."
+                    : "Não encontrei " + command.getTarget() + ".");
             case AMBIGUOUS -> respond("Encontrei mais de um contato: "
                     + String.join(", ", match.alternatives)
                     + ". Diga o nome completo.");
@@ -267,14 +388,13 @@ public final class MainActivity extends Activity implements VoiceController.List
             openWhatsAppCall(label, phone);
         } else if (command.getType() == AssistantCommand.Type.DIAL) {
             Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
-            respondAndStart("Abrindo o discador para " + label + ". Confirme a chamada no telefone.", intent);
+            respondAndStart("Discador para " + label + ".", intent);
         } else {
             Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("smsto", phone, null));
             if (!command.getMessage().trim().isEmpty()) {
                 intent.putExtra("sms_body", command.getMessage());
             }
-            respondAndStart("Abrindo a mensagem para " + label
-                    + ". Revise e confirme o envio no aplicativo.", intent);
+            respondAndStart("Mensagem para " + label + ".", intent);
         }
     }
 
@@ -294,30 +414,41 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     private void openNotificationSettings() {
-        respondAndStart("Ative o acesso do GuiaVoz às notificações para ler mensagens novas do WhatsApp.",
+        respondAndStart("Acesso às notificações.",
                 new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
     }
 
-    private void readWhatsAppMessages() {
+    private void readWhatsAppMessages(boolean playAudio) {
         List<WhatsAppMessageStore.Message> messages = WhatsAppMessageStore.read(this);
         if (messages.isEmpty()) {
-            respond("Não encontrei mensagens novas do WhatsApp. Ative a leitura de notificações e aguarde uma nova mensagem.");
+            respond("Nenhuma mensagem nova.");
             return;
         }
-        List<WhatsAppMessageStore.Message> recent = messages.stream().limit(8)
+        List<WhatsAppMessageStore.Message> recent = messages.stream().limit(4)
                 .collect(Collectors.toList());
+        String count = recent.size() == 1 ? "Uma mensagem nova. "
+                : recent.size() + " mensagens novas. ";
         String spoken = recent.stream().map(item -> item.audio
-                ? item.sender + " enviou uma mensagem de voz."
+                ? "Áudio de " + item.sender + "."
                 : item.sender + " disse: " + item.text + ".")
                 .collect(Collectors.joining(" "));
-        respond("Suas mensagens recentes do WhatsApp. " + spoken);
+        boolean hasAudio = recent.stream().anyMatch(item -> item.audio);
+        String response = count + spoken;
+        if (playAudio && hasAudio) {
+            status(response);
+            voiceController.speakThen(response,
+                    () -> runOnUiThread(this::playLatestWhatsAppAudio));
+        } else {
+            respond(response);
+        }
     }
 
     private void playLatestWhatsAppAudio() {
+        voiceController.stopSpeaking();
         if (WhatsAppNotificationService.openLatestAudio()) {
-            status("Abrindo a mensagem de voz no WhatsApp. O GuiaVoz tentará reproduzi-la.");
+            status("Reproduzindo áudio.");
         } else {
-            respond("Não encontrei uma mensagem de voz recente disponível. Ative a leitura de notificações e aguarde um novo áudio.");
+            respond("Nenhum áudio recente.");
         }
     }
 
@@ -327,14 +458,13 @@ public final class MainActivity extends Activity implements VoiceController.List
             digits = "55" + digits;
         }
         if (digits.length() < 10) {
-            respond("O número de " + label + " parece incompleto.");
+            respond("O contato " + label + " não tem um número utilizável.");
             return;
         }
         Intent intent = new Intent(Intent.ACTION_VIEW,
                 Uri.parse("whatsapp://send?phone=" + digits));
         intent.setPackage("com.whatsapp");
-        String message = "Abrindo diretamente a conversa de " + label
-                + " no WhatsApp para iniciar a chamada de voz.";
+        String message = "Ligando para " + label + ".";
         status(message);
         voiceController.speakThen(message, () -> runOnUiThread(() -> {
             // O prazo começa apenas quando o WhatsApp será aberto, não durante a fala.
@@ -342,6 +472,17 @@ public final class MainActivity extends Activity implements VoiceController.List
                     WhatsAppAccessibilityService.Action.CALL);
             safeStart(intent);
         }));
+    }
+
+    private void controlMedia(MediaActionController.Action action) {
+        if (mediaController.execute(action)) {
+            status(action == MediaActionController.Action.PAUSE
+                    ? "Mídia pausada."
+                    : action == MediaActionController.Action.NEXT
+                            ? "Próxima mídia." : "Reproduzindo mídia.");
+        } else {
+            respond("Nenhuma mídia ativa.");
+        }
     }
 
     private void openApp(String requestedApp) {
@@ -380,10 +521,9 @@ public final class MainActivity extends Activity implements VoiceController.List
                     respond("Não encontrei aplicativos que eu possa abrir.");
                     return;
                 }
-                String firstApps = apps.stream().limit(12).map(item -> item.label)
+                String firstApps = apps.stream().limit(5).map(item -> item.label)
                         .collect(Collectors.joining(", "));
-                String suffix = apps.size() > 12
-                        ? ". Há mais " + (apps.size() - 12) + " aplicativos." : ".";
+                String suffix = apps.size() > 5 ? ", entre outros." : ".";
                 respond("Encontrei " + apps.size() + " aplicativos. " + firstApps + suffix);
             });
         });
@@ -404,7 +544,6 @@ public final class MainActivity extends Activity implements VoiceController.List
 
     private void status(String message) {
         statusView.setText(message);
-        statusView.sendAccessibilityEvent(AccessibilityEvent.TYPE_ANNOUNCEMENT);
     }
 
     private void respond(String message) {
