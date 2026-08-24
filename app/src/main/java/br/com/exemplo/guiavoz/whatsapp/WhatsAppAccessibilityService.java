@@ -27,6 +27,7 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
 
     public enum Action {
         NONE, CALL, CONFIRM_CALL, PLAY_AUDIO,
+        SEND_MESSAGE,
         READ_SCREEN, TAP_ELEMENT, TYPE_TEXT, SCROLL_DOWN, SCROLL_UP, BACK
     }
 
@@ -100,7 +101,7 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
             return;
         }
         boolean whatsappAction = action == Action.CALL || action == Action.CONFIRM_CALL
-                || action == Action.PLAY_AUDIO;
+                || action == Action.PLAY_AUDIO || action == Action.SEND_MESSAGE;
         if (whatsappAction && !"com.whatsapp".contentEquals(event.getPackageName())) return;
         handler.postDelayed(() -> tryAction(action), 350);
     }
@@ -123,6 +124,10 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
     }
 
     private void tryWhatsAppAction(AccessibilityNodeInfo root, Action action) {
+        if (action == Action.SEND_MESSAGE) {
+            fillAndSendMessage(root, pendingMessageId);
+            return;
+        }
         List<String> labels;
         if (action == Action.CALL) {
             labels = Arrays.asList("Ligação de voz", "Chamada de voz", "Fazer ligação de voz");
@@ -150,6 +155,30 @@ public final class WhatsAppAccessibilityService extends AccessibilityService {
                 lockScreenAfterAudioIfEnabled();
             }
         }
+    }
+
+    private void fillAndSendMessage(AccessibilityNodeInfo root, String message) {
+        if (message == null || message.trim().isEmpty()) {
+            pendingAction = Action.NONE;
+            speak("A mensagem está vazia.");
+            return;
+        }
+        AccessibilityNodeInfo editable = findEditable(root);
+        if (editable == null || editable.isPassword()) return;
+        Bundle arguments = new Bundle();
+        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                message);
+        if (!editable.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) return;
+        handler.postDelayed(() -> {
+            AccessibilityNodeInfo current = getRootInActiveWindow();
+            if (current == null || pendingAction != Action.SEND_MESSAGE) return;
+            AccessibilityNodeInfo send = findClickable(current,
+                    Arrays.asList("Enviar", "Enviar mensagem"), false);
+            if (send == null || !send.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return;
+            pendingAction = Action.NONE;
+            pendingMessageId = "";
+            speak("Mensagem enviada.");
+        }, 350);
     }
 
     private void readScreen(AccessibilityNodeInfo root) {

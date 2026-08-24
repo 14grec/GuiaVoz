@@ -15,6 +15,8 @@ public final class AssistantCommand {
         WHATSAPP_MESSAGES,
         WHATSAPP_LISTEN_MESSAGES,
         WHATSAPP_CALL,
+        WHATSAPP_SEND_MESSAGE,
+        WHATSAPP_REPLY_MESSAGE,
         PLAY_WHATSAPP_AUDIO,
         PLAY_NEXT_AUDIO,
         REPEAT_AUDIO,

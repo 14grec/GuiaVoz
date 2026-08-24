@@ -47,4 +47,16 @@ mostrar a parte de cima,SCROLL_UP
 retorne a lista aos itens anteriores,SCROLL_UP
 retornar uma tela,BACK
 saia desta janela e volte uma etapa,BACK
-
+envie uma mensagem de whatsapp para pedro,WHATSAPP_SEND_MESSAGE
+quero mandar no zap para beatriz que ja sai,WHATSAPP_SEND_MESSAGE
+escreva para lucas pelo whats,WHATSAPP_SEND_MESSAGE
+avise minha irma no whatsapp dizendo chego as oito,WHATSAPP_SEND_MESSAGE
+mande um texto via whatsapp para o consultorio,WHATSAPP_SEND_MESSAGE
+responda ao pedro pelo whatsapp,WHATSAPP_REPLY_MESSAGE
+retorne no zap dizendo que eu aceito,WHATSAPP_REPLY_MESSAGE
+quero responder a ultima pessoa que escreveu,WHATSAPP_REPLY_MESSAGE
+responde essa mensagem com muito obrigado,WHATSAPP_REPLY_MESSAGE
+escreva uma resposta para bia no whats,WHATSAPP_REPLY_MESSAGE
+verifique se chegaram mensagens novas no whatsapp,WHATSAPP_MESSAGES
+leia a mensagem que beatriz enviou,WHATSAPP_MESSAGES
+ouca as mensagens recebidas e toque os audios,WHATSAPP_LISTEN_MESSAGES

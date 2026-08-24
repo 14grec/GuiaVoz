@@ -28,9 +28,16 @@ public final class CommandParser {
     private static final Set<String> LISTEN_ACTIONS = new HashSet<>(Arrays.asList(
             "ouvir", "ouca", "escutar", "escute"
     ));
+    private static final Set<String> SEND_WORDS = new HashSet<>(Arrays.asList(
+            "mandar", "mande", "manda", "enviar", "envie", "envia", "escrever",
+            "escreva", "avise", "avisar"
+    ));
+    private static final Set<String> REPLY_WORDS = new HashSet<>(Arrays.asList(
+            "responder", "responda", "responde", "retornar", "retorne", "resposta"
+    ));
     private static final List<String> SMS_PREFIXES = Arrays.asList(
             "enviar mensagem para ", "mandar mensagem para ",
-            "mensagem para ", "sms para "
+            "enviar sms para ", "mandar sms para ", "mensagem para ", "sms para "
     );
     private static final List<String> DIAL_PREFIXES = Arrays.asList(
             "ligar para ", "ligue para ", "discar para ", "telefonar para "
@@ -55,10 +62,17 @@ public final class CommandParser {
     public AssistantCommand parse(String spokenText) {
         String original = spokenText == null ? "" : spokenText.trim();
         if (original.isEmpty()) return command(AssistantCommand.Type.UNKNOWN, "", "", original);
+        NeuralIntentModel.Prediction lowConfidence = null;
         if (neuralModel != null) {
             NeuralIntentModel.Prediction prediction = neuralModel.predict(original);
+            lowConfidence = prediction;
             try {
-                AssistantCommand.Type type = AssistantCommand.Type.valueOf(prediction.label);
+                AssistantCommand.Type semanticType = typeFromSemantics(prediction);
+                AssistantCommand.Type terminalType = AssistantCommand.Type.valueOf(prediction.label);
+                AssistantCommand.Type type = semanticType;
+                if (type == null || (type != terminalType && prediction.intentConfidence >= 0.70f)) {
+                    type = terminalType;
+                }
                 float threshold = isSensitive(type)
                         ? SENSITIVE_NEURAL_THRESHOLD : NEURAL_THRESHOLD;
                 if (prediction.confidence >= threshold) {
@@ -69,7 +83,12 @@ public final class CommandParser {
                 // Um modelo mais novo nunca pode derrubar uma versão antiga do executor.
             }
         }
-        return parseByRules(original);
+        AssistantCommand rules = parseByRules(original);
+        if (rules.getType() == AssistantCommand.Type.UNKNOWN && lowConfidence != null) {
+            return new AssistantCommand(AssistantCommand.Type.UNKNOWN, "", "", original,
+                    lowConfidence.confidence, "neural-low-confidence:" + lowConfidence.semanticKey());
+        }
+        return rules;
     }
 
     private AssistantCommand parseByRules(String spokenText) {
@@ -102,6 +121,21 @@ public final class CommandParser {
         boolean whatsapp = containsWord(normalized, WHATSAPP_NAMES);
         boolean audio = containsAny(normalized, "audio", "audios", "mensagem de voz", "mensagens de voz");
         boolean messages = containsAny(normalized, "mensagem", "mensagens", "conversa", "conversas");
+
+        if (containsWord(normalized, REPLY_WORDS)
+                && (whatsapp || messages || normalized.contains("ultimo contato"))) {
+            String[] slots = extractWhatsAppMessageSlots(original, true);
+            return command(AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE,
+                    slots[0], slots[1], original);
+        }
+
+        if (containsWord(normalized, SEND_WORDS)
+                && (whatsapp || ((messages || normalized.contains("texto"))
+                && !containsAny(normalized, "sms", "mensagem de texto")))) {
+            String[] slots = extractWhatsAppMessageSlots(original, false);
+            return command(AssistantCommand.Type.WHATSAPP_SEND_MESSAGE,
+                    slots[0], slots[1], original);
+        }
 
         if (audio && containsWord(normalized, AUDIO_ACTIONS)) {
             return command(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "", original);
@@ -187,6 +221,11 @@ public final class CommandParser {
         return switch (type) {
             case WHATSAPP_CALL -> neuralCommand(type, extractWhatsAppCallTarget(original), "",
                     original, confidence);
+            case WHATSAPP_SEND_MESSAGE, WHATSAPP_REPLY_MESSAGE -> {
+                String[] slots = extractWhatsAppMessageSlots(original,
+                        type == AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE);
+                yield neuralCommand(type, slots[0], slots[1], original, confidence);
+            }
             case OPEN_APP -> withRequiredTarget(type,
                     stripIntentWords(original, "abrir", "abre", "abra", "iniciar", "inicie",
                             "aplicativo", "app", "programa", "quero", "usar", "entrar", "no", "na"),
@@ -229,7 +268,64 @@ public final class CommandParser {
     private boolean isSensitive(AssistantCommand.Type type) {
         return type == AssistantCommand.Type.DIAL
                 || type == AssistantCommand.Type.SMS
-                || type == AssistantCommand.Type.WHATSAPP_CALL;
+                || type == AssistantCommand.Type.WHATSAPP_CALL
+                || type == AssistantCommand.Type.WHATSAPP_SEND_MESSAGE
+                || type == AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE;
+    }
+
+    private AssistantCommand.Type typeFromSemantics(NeuralIntentModel.Prediction prediction) {
+        String key = prediction.semanticKey();
+        return switch (key) {
+            case "SEND:MESSAGE:WHATSAPP" -> AssistantCommand.Type.WHATSAPP_SEND_MESSAGE;
+            case "REPLY:MESSAGE:WHATSAPP" -> AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE;
+            case "READ:MESSAGE:WHATSAPP" -> AssistantCommand.Type.WHATSAPP_MESSAGES;
+            case "LISTEN:MESSAGE:WHATSAPP" -> AssistantCommand.Type.WHATSAPP_LISTEN_MESSAGES;
+            case "CALL:CONTACT:WHATSAPP" -> AssistantCommand.Type.WHATSAPP_CALL;
+            case "CALL:CONTACT:PHONE" -> AssistantCommand.Type.DIAL;
+            case "SEND:MESSAGE:SMS" -> AssistantCommand.Type.SMS;
+            case "PLAY:AUDIO:WHATSAPP" -> AssistantCommand.Type.PLAY_WHATSAPP_AUDIO;
+            case "NEXT:AUDIO:WHATSAPP" -> AssistantCommand.Type.PLAY_NEXT_AUDIO;
+            case "REPEAT:AUDIO:WHATSAPP" -> AssistantCommand.Type.REPEAT_AUDIO;
+            case "OPEN:APP:ANY" -> AssistantCommand.Type.OPEN_APP;
+            case "LIST:APP:ANY" -> AssistantCommand.Type.LIST_APPS;
+            case "READ:SCREEN:CURRENT" -> AssistantCommand.Type.READ_SCREEN;
+            case "TAP:ELEMENT:CURRENT" -> AssistantCommand.Type.TAP_ELEMENT;
+            case "TYPE:TEXT:CURRENT" -> AssistantCommand.Type.TYPE_TEXT;
+            case "SCROLL_DOWN:SCREEN:CURRENT" -> AssistantCommand.Type.SCROLL_DOWN;
+            case "SCROLL_UP:SCREEN:CURRENT" -> AssistantCommand.Type.SCROLL_UP;
+            case "BACK:SCREEN:CURRENT" -> AssistantCommand.Type.BACK;
+            case "PLAY:MEDIA:ANY" -> AssistantCommand.Type.MEDIA_PLAY;
+            case "PAUSE:MEDIA:ANY" -> AssistantCommand.Type.MEDIA_PAUSE;
+            case "NEXT:MEDIA:ANY" -> AssistantCommand.Type.MEDIA_NEXT;
+            case "CONTINUE:SESSION:WHATSAPP" -> AssistantCommand.Type.CONTINUE_SESSION;
+            case "GET:TIME:SYSTEM" -> AssistantCommand.Type.TIME;
+            case "HELP:NONE:SYSTEM" -> AssistantCommand.Type.HELP;
+            case "OPEN:MAP:SYSTEM" -> AssistantCommand.Type.MAP;
+            case "OPEN:ACCESSIBILITY:SYSTEM" -> AssistantCommand.Type.ACCESSIBILITY_SETTINGS;
+            default -> null;
+        };
+    }
+
+    private String[] extractWhatsAppMessageSlots(String original, boolean reply) {
+        String beforeContent = original.trim();
+        String content = "";
+        Matcher divider = Pattern.compile(
+                "(?iu)\\s+(dizendo|falando|com\\s+a\\s+mensagem|com\\s+o\\s+texto|que)\\s+")
+                .matcher(beforeContent);
+        if (divider.find()) {
+            content = beforeContent.substring(divider.end()).trim();
+            beforeContent = beforeContent.substring(0, divider.start()).trim();
+        }
+        String target = stripIntentWords(beforeContent,
+                "mandar", "mande", "manda", "enviar", "envie", "envia", "escrever",
+                "escreva", "avise", "avisar", "fale", "responder", "responda", "responde",
+                "retornar", "retorne", "resposta", "mensagem", "texto", "recado", "escrito",
+                "whatsapp", "whats", "zap", "pelo", "pela", "via", "no", "na", "para",
+                "pra", "pro", "ao", "a", "o", "uma", "um", "quero", "preciso", "ultima",
+                "ultimo", "pessoa", "contato", "quem", "acabou", "falar", "comigo", "essa",
+                "esta", "conversa");
+        if (reply && target.equalsIgnoreCase("mensagem")) target = "";
+        return new String[]{target, content};
     }
 
     private String stripIntentWords(String original, String... ignoredWords) {

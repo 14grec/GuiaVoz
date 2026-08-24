@@ -121,11 +121,18 @@ public final class WhatsAppNotificationService extends NotificationListenerServi
     }
 
     public static boolean openRecentConversation(String requestedName) {
+        return openRecentConversation(requestedName,
+                WhatsAppAccessibilityService.Action.CALL, "");
+    }
+
+    public static boolean openRecentConversation(String requestedName,
+                                                  WhatsAppAccessibilityService.Action action,
+                                                  String value) {
         PendingIntent selected = findConversation(requestedName);
         if (selected == null) return false;
         try {
             WhatsAppAccessibilityService.requestWhatsAppAction(
-                    WhatsAppAccessibilityService.Action.CALL, "");
+                    action, value);
             selected.send();
             return true;
         } catch (PendingIntent.CanceledException error) {

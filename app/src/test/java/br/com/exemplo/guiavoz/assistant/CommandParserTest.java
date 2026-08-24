@@ -17,10 +17,30 @@ public final class CommandParserTest {
     @Test
     public void parsesSmsWithMessage() {
         AssistantCommand command = parser.parse(
-                "Enviar mensagem para João dizendo estou chegando");
+                "Enviar SMS para João dizendo estou chegando");
         assertEquals(AssistantCommand.Type.SMS, command.getType());
         assertEquals("João", command.getTarget());
         assertEquals("estou chegando", command.getMessage());
+    }
+
+    @Test
+    public void distinguishesSendingFromReadingWhatsAppMessages() {
+        AssistantCommand command = parser.parse(
+                "Quero enviar uma mensagem para João dizendo estou chegando");
+        assertEquals(AssistantCommand.Type.WHATSAPP_SEND_MESSAGE, command.getType());
+        assertEquals("João", command.getTarget());
+        assertEquals("estou chegando", command.getMessage());
+        assertEquals(AssistantCommand.Type.WHATSAPP_MESSAGES,
+                parser.parse("Quero verificar mensagens novas").getType());
+    }
+
+    @Test
+    public void parsesWhatsAppReplyWithContent() {
+        AssistantCommand command = parser.parse(
+                "Responda ao Carlos no WhatsApp dizendo tudo bem");
+        assertEquals(AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE, command.getType());
+        assertEquals("Carlos", command.getTarget());
+        assertEquals("tudo bem", command.getMessage());
     }
 
     @Test

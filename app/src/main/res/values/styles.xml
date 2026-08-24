@@ -1,11 +1,15 @@
 <resources>
-    <style name="Theme.GuiaVoz" parent="android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:fontFamily">sans</item>
+    <style name="Theme.GuiaVoz" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">#F4F7F9</item>
         <item name="android:navigationBarColor">#0F2A33</item>
         <item name="android:windowBackground">#F4F7F9</item>
         <item name="android:colorAccent">#1F8A70</item>
+        <item name="colorPrimary">#0E5B67</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#1F8A70</item>
+        <item name="colorSurface">#FFFFFF</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
 </resources>

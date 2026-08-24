@@ -2,16 +2,29 @@
 
 Protótipo nativo em Java para testar uma interface por voz voltada a pessoas com deficiência visual. O app reconhece comandos em português do Brasil, responde por síntese de fala e delega ações a outros apps com `Intent`.
 
-## Versão 0.4.0 — cérebro neural local
+## Versão 0.5.0 — diálogo seguro e capacidades de apps
 
-- Rede neural offline treinada para 24 intenções, com confiança e saída estruturada.
+- Rede neural hierárquica offline treinada antes do APK para 26 intenções, com
+  saídas separadas de ação, objeto e canal.
+- Envio e resposta pelo WhatsApp com diálogo para destinatário e conteúdo.
+- Confirmação falada obrigatória antes de enviar uma mensagem ou iniciar uma
+  chamada do WhatsApp.
+- Comandos desconhecidos ou marcados como errados registrados somente no aparelho
+  para revisão e novo treinamento.
+- Scanner de apps inicializáveis com pacote, versão e capacidades declaradas.
+- Registro de capacidades embutido e atualização declarativa online; o registro
+  não contém nem executa código remoto.
+- Candidatura a assistente padrão pelo papel oficial do Android. Ao ser invocado
+  pelo gesto do assistente, o GuiaVoz inicia a escuta.
+- Interface Material 3 mínima: falar, status e uma seção de configuração recolhida.
 - Corpus local em português, avaliação separada e treinamento reproduzível em Python.
 - Fallback determinístico quando a confiança neural não é suficiente.
 - Mensagens novas agrupadas: **“Novas mensagens de João: texto um; texto dois.”**
 - Estado local de áudio novo, solicitado e ouvido, com **próximo áudio** e **repetir áudio**.
 - Leitura conjunta de textos e áudios sem a voz do GuiaVoz sobrepor a reprodução.
 - Navegação assistiva experimental: ler tela, tocar em elemento, digitar, rolar e voltar.
-- Interface reduzida para fala, teste do cérebro, permissões e preferências.
+- Interface reduzida para fala e status; teste, permissões e preferências ficam em
+  **Configurar**.
 
 Na primeira execução, use **Acesso às notificações** e **Navegação por voz**. O Android exige que a pessoa habilite manualmente os dois serviços. O serviço de acessibilidade só executa uma ação após comando explícito, ignora campos de senha, bloqueia alvos sensíveis genéricos e cancela a ação quando ela expira.
 
@@ -52,12 +65,14 @@ O Android pode solicitar autorização para instalar aplicativos desta fonte. Es
 - “Toque o próximo áudio”
 - “Repita o último áudio”
 - “Ligar para Maria no WhatsApp”
+- “Enviar mensagem para João dizendo estou chegando”
+- “Responder a última mensagem dizendo tudo bem”
 - “Pausar música”
 - “Próxima faixa”
 - “Quais aplicativos estão instalados?”
 - “Ligar para Maria”
 - “Ligar para 11 99999 1234”
-- “Enviar mensagem para João dizendo estou chegando”
+- “Enviar SMS para João dizendo estou chegando”
 - “Abrir mapa para Avenida Paulista 1000”
 - “Abrir acessibilidade”
 - “Leia esta tela”
@@ -68,9 +83,9 @@ O Android pode solicitar autorização para instalar aplicativos desta fonte. Es
 
 ## Treinar o cérebro
 
-O modelo incluído no APK é uma rede neural compacta de duas etapas: n-gramas de
-caracteres alimentam uma camada oculta treinada para reconhecer a intenção. A
-inferência é implementada em Java puro e o arquivo de pesos tem menos de 500 KB.
+O modelo incluído no APK tem quatro saídas: ação, objeto, canal e intenção
+terminal. A inferência é implementada em Java puro. O relatório atual usa 333
+frases-base, 7.653 variações de treino e 61 comandos inéditos de avaliação.
 
 ```bash
 python -m pip install -r training/requirements.txt
@@ -101,10 +116,13 @@ O modo de navegação usa `AccessibilityService` para agir somente sobre element
 
 ## Segurança e privacidade
 
-- Nesta versão, o reconhecimento ainda é iniciado por toque e pode usar o serviço de voz configurado no aparelho.
+- O reconhecimento pode ser iniciado pelo botão ou pela invocação do assistente
+  padrão e usa o serviço de voz configurado no aparelho.
 - Contatos são lidos somente no dispositivo e apenas para resolver o comando atual.
-- O app não faz chamada direta e não envia mensagem sozinho: abre o app apropriado para revisão e confirmação.
-- Não há coleta, servidor próprio, analytics ou armazenamento do áudio/transcrição neste protótipo.
+- O app só inicia chamada ou envia mensagem pelo WhatsApp depois de confirmação
+  falada explícita.
+- Não há analytics nem envio de transcrições. O histórico de falhas fica no
+  armazenamento privado local para treinos futuros.
 
 Veja também [docs/ARQUITETURA_E_LIMITES.md](docs/ARQUITETURA_E_LIMITES.md).
 

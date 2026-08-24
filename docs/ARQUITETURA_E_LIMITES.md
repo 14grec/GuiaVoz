@@ -3,12 +3,15 @@
 ## Fluxo
 
 1. `VoiceController` inicia o reconhecimento e entrega a melhor transcrição.
-2. `CommandParser` converte a frase em um comando tipado.
-3. `MainActivity` solicita a permissão mínima no momento de uso e mantém somente a interface de teste.
+2. `NeuralIntentModel` prevê ação, objeto, canal e intenção terminal; o
+   `CommandParser` aplica decodificação restrita e extrai os campos do comando.
+3. `MainActivity` mantém o diálogo e solicita a permissão mínima no momento de uso.
 4. `ContactRepository` ou `InstalledAppRepository` resolve o alvo.
-5. Uma `Intent` abre o app responsável, mantendo a confirmação final com a pessoa.
-6. O resultado visual pode ser detalhado, mas a resposta falada segue uma política curta.
-7. `MediaActionController` controla sessões de mídia ativas sem abrir o aplicativo quando possível.
+5. Mensagens e chamadas entram em estado pendente e exigem “sim” antes da execução.
+6. `CapabilityRegistry` cruza pacote e versão dos apps inicializáveis com um
+   catálogo declarativo embutido/online. Dados remotos não viram código executável.
+7. O resultado visual pode ser detalhado, mas a resposta falada segue uma política curta.
+8. `MediaActionController` controla sessões de mídia ativas sem abrir o aplicativo quando possível.
 
 ## Decisões de acessibilidade
 
@@ -29,11 +32,11 @@ Há três níveis possíveis:
 
 “Interagir com absolutamente todos os apps” não é uma garantia tecnicamente possível: apps podem não exportar ações, bloquear deep links, esconder atividades ou alterar a interface. O caminho sustentável é criar adaptadores explícitos por capacidade e um fallback que apenas abre o aplicativo.
 
-## Próximas fases recomendadas
+## Estado e próximas fases
 
 - Extrair o roteador de comandos da `MainActivity` para um serviço reutilizável.
-- Tornar o GuiaVoz selecionável como assistente padrão com `VoiceInteractionService`.
-- Confirmação conversacional para contatos ou apps ambíguos.
+- O GuiaVoz já se qualifica para `ROLE_ASSISTANT` por tratar `ACTION_ASSIST`. Uma
+  sessão completa de `VoiceInteractionService` continua sendo uma evolução futura.
 - Reconhecimento de voz offline quando disponível no dispositivo.
 - Catálogo de adaptadores para deep links documentados.
 - Comandos de câmera, calendário, alarmes e compartilhamento.

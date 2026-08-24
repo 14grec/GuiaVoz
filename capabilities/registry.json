@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "updated_at": "2026-08-24",
+  "locale": "pt-BR",
+  "apps": [
+    {
+      "package": "com.whatsapp",
+      "label": "WhatsApp",
+      "capabilities": ["OPEN", "READ_NOTIFICATIONS", "READ_SCREEN", "TAP", "TYPE", "SCROLL", "SEND_MESSAGE", "REPLY_MESSAGE", "CALL", "PLAY_AUDIO"]
+    },
+    {
+      "package": "com.spotify.music",
+      "label": "Spotify",
+      "capabilities": ["OPEN", "READ_SCREEN", "TAP", "TYPE", "SCROLL", "CONTROL_MEDIA", "SEARCH"]
+    },
+    {
+      "package": "com.google.android.youtube",
+      "label": "YouTube",
+      "capabilities": ["OPEN", "READ_SCREEN", "TAP", "TYPE", "SCROLL", "CONTROL_MEDIA", "SEARCH"]
+    },
+    {
+      "package": "com.google.android.apps.maps",
+      "label": "Google Maps",
+      "capabilities": ["OPEN", "READ_SCREEN", "TAP", "TYPE", "SCROLL", "SEARCH", "NAVIGATE"]
+    },
+    {
+      "package": "com.google.android.dialer",
+      "label": "Telefone",
+      "capabilities": ["OPEN", "CALL"]
+    },
+    {
+      "package": "com.google.android.apps.messaging",
+      "label": "Mensagens",
+      "capabilities": ["OPEN", "SEND_MESSAGE"]
+    }
+  ]
+}

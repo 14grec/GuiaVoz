@@ -20,10 +20,29 @@ public final class InstalledAppRepository {
     public static final class AppInfo {
         public final String label;
         public final String packageName;
+        public final String versionName;
+        public final long versionCode;
+        public final List<String> capabilities;
 
-        AppInfo(String label, String packageName) {
+        AppInfo(String label, String packageName, String versionName, long versionCode,
+                List<String> capabilities) {
             this.label = label;
             this.packageName = packageName;
+            this.versionName = versionName;
+            this.versionCode = versionCode;
+            this.capabilities = capabilities;
+        }
+    }
+
+    public static final class ScanReport {
+        public final int installedApps;
+        public final int recognizedApps;
+        public final int capabilities;
+
+        ScanReport(int installedApps, int recognizedApps, int capabilities) {
+            this.installedApps = installedApps;
+            this.recognizedApps = recognizedApps;
+            this.capabilities = capabilities;
         }
     }
 
@@ -55,10 +74,15 @@ public final class InstalledAppRepository {
 
     private final Context context;
     private final PackageManager packageManager;
+    private CapabilityRegistry registry;
 
     public InstalledAppRepository(Context context) {
         this.context = context.getApplicationContext();
         this.packageManager = context.getPackageManager();
+    }
+
+    public void setRegistry(CapabilityRegistry registry) {
+        this.registry = registry;
     }
 
     public List<AppInfo> listLaunchableApps() {
@@ -77,12 +101,35 @@ public final class InstalledAppRepository {
             String packageName = info.activityInfo.packageName;
             if (packageName.equals(context.getPackageName())) continue;
             String label = String.valueOf(info.loadLabel(packageManager));
-            unique.putIfAbsent(packageName, new AppInfo(label, packageName));
+            String versionName = "";
+            long versionCode = 0;
+            try {
+                android.content.pm.PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+                versionName = packageInfo.versionName == null ? "" : packageInfo.versionName;
+                versionCode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                        ? packageInfo.getLongVersionCode() : packageInfo.versionCode;
+            } catch (PackageManager.NameNotFoundException ignored) {}
+            CapabilityRegistry.Entry entry = registry == null ? null : registry.find(packageName);
+            List<String> capabilities = entry == null ? Collections.singletonList("OPEN")
+                    : entry.capabilities;
+            unique.putIfAbsent(packageName, new AppInfo(label, packageName, versionName,
+                    versionCode, capabilities));
         }
 
         List<AppInfo> apps = new ArrayList<>(unique.values());
         apps.sort(Comparator.comparing(item -> TextNormalizer.normalize(item.label)));
         return apps;
+    }
+
+    public ScanReport scanCapabilities() {
+        List<AppInfo> apps = listLaunchableApps();
+        int recognized = 0;
+        int capabilityCount = 0;
+        for (AppInfo app : apps) {
+            if (app.capabilities.size() > 1) recognized++;
+            capabilityCount += app.capabilities.size();
+        }
+        return new ScanReport(apps.size(), recognized, capabilityCount);
     }
 
     public Match findByLabel(String requestedLabel) {

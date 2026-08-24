@@ -2,6 +2,7 @@ package br.com.exemplo.guiavoz;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.role.RoleManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +11,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,9 +25,12 @@ import android.widget.TextView;
 import br.com.exemplo.guiavoz.assistant.AssistantCommand;
 import br.com.exemplo.guiavoz.assistant.CommandParser;
 import br.com.exemplo.guiavoz.assistant.NeuralIntentModel;
+import br.com.exemplo.guiavoz.assistant.MisunderstoodCommandStore;
 import br.com.exemplo.guiavoz.assistant.PhoneTextParser;
+import br.com.exemplo.guiavoz.assistant.TextNormalizer;
 import br.com.exemplo.guiavoz.data.ContactRepository;
 import br.com.exemplo.guiavoz.data.InstalledAppRepository;
+import br.com.exemplo.guiavoz.data.CapabilityRegistry;
 import br.com.exemplo.guiavoz.media.MediaActionController;
 import br.com.exemplo.guiavoz.voice.VoiceController;
 import br.com.exemplo.guiavoz.whatsapp.WhatsAppAccessibilityService;
@@ -45,11 +50,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.materialswitch.MaterialSwitch;
+
 public final class MainActivity extends Activity implements VoiceController.Listener {
     private static final int REQUEST_MICROPHONE = 10;
     private static final int REQUEST_CONTACTS = 11;
-    private static final String HELP_TEXT = "Diga: ouvir mensagens, próximo áudio, repetir áudio, "
-            + "ligar para Maria no WhatsApp, abrir Spotify, ler esta tela ou tocar em pesquisar.";
+    private static final int REQUEST_ASSISTANT_ROLE = 12;
+    private static final String HELP_TEXT = "Diga: enviar mensagem pelo WhatsApp, responder a última "
+            + "mensagem, ouvir mensagens, ligar pelo WhatsApp, abrir Spotify ou ler esta tela.";
     private static final int COLOR_BACKGROUND = Color.rgb(244, 247, 249);
     private static final int COLOR_SURFACE = Color.WHITE;
     private static final int COLOR_PRIMARY = Color.rgb(14, 91, 103);
@@ -62,13 +71,33 @@ public final class MainActivity extends Activity implements VoiceController.List
     private VoiceController voiceController;
     private ContactRepository contactRepository;
     private InstalledAppRepository appRepository;
+    private CapabilityRegistry capabilityRegistry;
     private MediaActionController mediaController;
     private TextView statusView;
     private TextView transcriptView;
     private EditText commandInput;
     private Button listenButton;
     private Switch lockScreenSwitch;
+    private LinearLayout configurationPanel;
+    private TextView appScanView;
     private AssistantCommand pendingContactCommand;
+    private AssistantCommand lastCommand;
+    private PendingSensitiveAction pendingSensitiveAction;
+
+    private enum DialogueStage { RECIPIENT, CONTENT, CONFIRMATION }
+
+    private static final class PendingSensitiveAction {
+        AssistantCommand command;
+        DialogueStage stage;
+        String label = "";
+        String phone = "";
+        boolean recentConversation;
+
+        PendingSensitiveAction(AssistantCommand command, DialogueStage stage) {
+            this.command = command;
+            this.stage = stage;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +105,10 @@ public final class MainActivity extends Activity implements VoiceController.List
         setContentView(createInterface());
         parser = loadCommandParser();
         contactRepository = new ContactRepository(getContentResolver());
+        capabilityRegistry = new CapabilityRegistry(this);
+        capabilityRegistry.loadBundled();
         appRepository = new InstalledAppRepository(this);
+        appRepository.setRegistry(capabilityRegistry);
         mediaController = new MediaActionController(this);
         voiceController = new VoiceController(this, this);
 
@@ -84,12 +116,22 @@ public final class MainActivity extends Activity implements VoiceController.List
         findViewById(1002).setOnClickListener(view -> runTypedCommand());
         findViewById(1005).setOnClickListener(view -> openNotificationSettings());
         findViewById(1006).setOnClickListener(view -> openAccessibilitySettings());
+        findViewById(1003).setOnClickListener(view -> toggleConfiguration());
+        findViewById(1007).setOnClickListener(view -> requestAssistantRole());
+        findViewById(1008).setOnClickListener(view -> refreshCapabilities(true));
         lockScreenSwitch.setOnCheckedChangeListener((button, enabled) ->
                 getSharedPreferences(WhatsAppAccessibilityService.PREFERENCES, MODE_PRIVATE)
                         .edit().putBoolean(WhatsAppAccessibilityService.LOCK_SCREEN_AFTER_AUDIO,
                                 enabled).apply());
 
-        statusView.post(() -> status(getString(R.string.status_ready)));
+        statusView.post(() -> {
+            status(getString(R.string.status_ready));
+            refreshCapabilities(false);
+            if (Intent.ACTION_ASSIST.equals(getIntent().getAction())
+                    || Intent.ACTION_VOICE_COMMAND.equals(getIntent().getAction())) {
+                startVoiceCommand();
+            }
+        });
     }
 
     private CommandParser loadCommandParser() {
@@ -143,6 +185,12 @@ public final class MainActivity extends Activity implements VoiceController.List
         statusCard.addView(transcriptView, matchWrap());
         content.addView(statusCard, cardParams());
 
+        content.addView(secondaryButton(1003, "Configurar",
+                "Mostra permissões e opções avançadas"), matchWrap());
+        configurationPanel = new LinearLayout(this);
+        configurationPanel.setOrientation(LinearLayout.VERTICAL);
+        configurationPanel.setVisibility(View.GONE);
+
         LinearLayout testCard = card();
         testCard.addView(sectionTitle("Testar o cérebro"), matchWrap());
 
@@ -161,11 +209,11 @@ public final class MainActivity extends Activity implements VoiceController.List
 
         testCard.addView(secondaryButton(1002, getString(R.string.run_text),
                 "Executa o comando digitado"), matchWrap());
-        content.addView(testCard, cardParams());
+        configurationPanel.addView(testCard, cardParams());
 
         LinearLayout settingsCard = card();
         settingsCard.addView(sectionTitle("Permissões e preferências"), matchWrap());
-        lockScreenSwitch = new Switch(this);
+        lockScreenSwitch = new MaterialSwitch(this);
         lockScreenSwitch.setText("Bloquear tela ao reproduzir áudio");
         lockScreenSwitch.setTextSize(18);
         lockScreenSwitch.setTextColor(COLOR_PRIMARY_DARK);
@@ -180,7 +228,15 @@ public final class MainActivity extends Activity implements VoiceController.List
                 "Permite ler notificações do WhatsApp"), matchWrap());
         settingsCard.addView(secondaryButton(1006, getString(R.string.whatsapp_accessibility),
                 "Permite controlar chamadas e áudios do WhatsApp"), matchWrap());
-        content.addView(settingsCard, cardParams());
+        settingsCard.addView(secondaryButton(1007, "Tornar assistente padrão",
+                "Solicita ao Android o papel de assistente padrão"), matchWrap());
+        settingsCard.addView(secondaryButton(1008, "Atualizar capacidades dos aplicativos",
+                "Verifica aplicativos instalados e atualiza o registro online"), matchWrap());
+        appScanView = text("Aplicativos: verificando…", 15, COLOR_TEXT_MUTED);
+        appScanView.setPadding(0, dp(10), 0, 0);
+        settingsCard.addView(appScanView, matchWrap());
+        configurationPanel.addView(settingsCard, cardParams());
+        content.addView(configurationPanel, matchWrap());
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -198,7 +254,7 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     private Button button(int id, String label, String description) {
-        Button button = new Button(this);
+        MaterialButton button = new MaterialButton(this);
         button.setId(id);
         button.setText(label);
         button.setTextSize(18);
@@ -297,7 +353,19 @@ public final class MainActivity extends Activity implements VoiceController.List
     @Override
     public void onRecognized(String text) {
         transcriptView.setText("Último comando: “" + text + "”");
-        execute(parser.parse(text));
+        if (handleDialogue(text)) return;
+        String normalized = TextNormalizer.normalize(text);
+        if (normalized.contains("entendeu errado") || normalized.contains("comando errado")
+                || normalized.contains("nao foi isso")) {
+            if (lastCommand != null) {
+                MisunderstoodCommandStore.record(this, lastCommand, "user_correction");
+                respond("Registrei para melhorar o próximo treino.");
+            } else respond("Ainda não há comando anterior para registrar.");
+            return;
+        }
+        AssistantCommand command = parser.parse(text);
+        lastCommand = command;
+        execute(command);
     }
 
     @Override
@@ -321,6 +389,8 @@ public final class MainActivity extends Activity implements VoiceController.List
             case WHATSAPP_MESSAGES -> readWhatsAppMessages(false);
             case WHATSAPP_LISTEN_MESSAGES -> readWhatsAppMessages(true);
             case WHATSAPP_CALL -> callWhatsApp(command);
+            case WHATSAPP_SEND_MESSAGE, WHATSAPP_REPLY_MESSAGE ->
+                    beginWhatsAppMessage(command);
             case PLAY_WHATSAPP_AUDIO -> playLatestWhatsAppAudio();
             case PLAY_NEXT_AUDIO -> playNextWhatsAppAudio();
             case REPEAT_AUDIO -> repeatWhatsAppAudio();
@@ -336,7 +406,82 @@ public final class MainActivity extends Activity implements VoiceController.List
             case SCROLL_DOWN -> navigate(WhatsAppAccessibilityService.Action.SCROLL_DOWN, "");
             case SCROLL_UP -> navigate(WhatsAppAccessibilityService.Action.SCROLL_UP, "");
             case BACK -> navigate(WhatsAppAccessibilityService.Action.BACK, "");
-            case UNKNOWN -> respond("Não entendi. Diga ajuda para ouvir exemplos.");
+            case UNKNOWN -> {
+                MisunderstoodCommandStore.record(this, command, "unknown_or_low_confidence");
+                respond("Não entendi. Tente dizer a ação, a pessoa e o aplicativo.");
+            }
+        }
+    }
+
+    private boolean handleDialogue(String text) {
+        PendingSensitiveAction pending = pendingSensitiveAction;
+        if (pending == null) return false;
+        String normalized = TextNormalizer.normalize(text);
+        if (normalized.equals("cancelar") || normalized.equals("cancele")
+                || normalized.equals("nao") || normalized.equals("não")) {
+            pendingSensitiveAction = null;
+            respond("Cancelado.");
+            return true;
+        }
+        if (pending.stage == DialogueStage.CONFIRMATION) {
+            if (normalized.equals("sim") || normalized.equals("confirmar")
+                    || normalized.equals("confirme") || normalized.equals("pode")
+                    || normalized.equals("pode enviar") || normalized.equals("pode ligar")) {
+                pendingSensitiveAction = null;
+                executeConfirmed(pending);
+            } else {
+                ask("Diga sim para confirmar ou não para cancelar.");
+            }
+            return true;
+        }
+        if (pending.stage == DialogueStage.RECIPIENT) {
+            pending.command = copyCommand(pending.command, text.trim(),
+                    pending.command.getMessage());
+            if (pending.command.getType() == AssistantCommand.Type.WHATSAPP_CALL) {
+                callWhatsApp(pending.command);
+            } else if (pending.command.getMessage().isEmpty()) {
+                pending.stage = DialogueStage.CONTENT;
+                ask("Qual mensagem?");
+            } else beginWhatsAppMessage(pending.command);
+            return true;
+        }
+        if (pending.stage == DialogueStage.CONTENT) {
+            pending.command = copyCommand(pending.command, pending.command.getTarget(), text.trim());
+            beginWhatsAppMessage(pending.command);
+            return true;
+        }
+        return false;
+    }
+
+    private AssistantCommand copyCommand(AssistantCommand command, String target, String message) {
+        return new AssistantCommand(command.getType(), target, message, command.getOriginal(),
+                command.getConfidence(), command.getSource());
+    }
+
+    private void beginWhatsAppMessage(AssistantCommand command) {
+        String target = command.getTarget();
+        if (target.isEmpty() && command.getType() == AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE) {
+            target = WhatsAppMessageStore.latestSender(this);
+            command = copyCommand(command, target, command.getMessage());
+        }
+        if (target.isEmpty()) {
+            pendingSensitiveAction = new PendingSensitiveAction(command, DialogueStage.RECIPIENT);
+            ask("Para quem?");
+        } else if (command.getMessage().isEmpty()) {
+            pendingSensitiveAction = new PendingSensitiveAction(command, DialogueStage.CONTENT);
+            ask("Qual mensagem?");
+        } else {
+            PendingSensitiveAction pending = new PendingSensitiveAction(command,
+                    DialogueStage.CONFIRMATION);
+            if (WhatsAppNotificationService.hasRecentConversation(target)) {
+                pending.label = target;
+                pending.recentConversation = true;
+                pendingSensitiveAction = pending;
+                askConfirmation(pending);
+            } else {
+                pendingSensitiveAction = pending;
+                resolvePhoneAction(command);
+            }
         }
     }
 
@@ -352,19 +497,20 @@ public final class MainActivity extends Activity implements VoiceController.List
     private void callWhatsApp(AssistantCommand command) {
         String target = command.getTarget().trim();
         if (target.isEmpty()) {
-            respond("Para quem?");
+            pendingSensitiveAction = new PendingSensitiveAction(command, DialogueStage.RECIPIENT);
+            ask("Para quem?");
             return;
         }
         if (WhatsAppNotificationService.hasRecentConversation(target)) {
-            String message = "Ligando para " + target + ".";
-            status(message);
-            voiceController.speakThen(message, () -> {
-                if (!WhatsAppNotificationService.openRecentConversation(target)) {
-                    runOnUiThread(() -> resolvePhoneAction(command));
-                }
-            });
+            PendingSensitiveAction pending = new PendingSensitiveAction(command,
+                    DialogueStage.CONFIRMATION);
+            pending.label = target;
+            pending.recentConversation = true;
+            pendingSensitiveAction = pending;
+            askConfirmation(pending);
             return;
         }
+        pendingSensitiveAction = new PendingSensitiveAction(command, DialogueStage.CONFIRMATION);
         resolvePhoneAction(command);
     }
 
@@ -394,7 +540,7 @@ public final class MainActivity extends Activity implements VoiceController.List
     private void handleContactMatch(AssistantCommand command, ContactRepository.Match match) {
         switch (match.status) {
             case FOUND -> completePhoneAction(command, match.displayName, match.phoneNumber);
-            case NOT_FOUND -> respond(command.getType() == AssistantCommand.Type.WHATSAPP_CALL
+            case NOT_FOUND -> respond(isWhatsAppSensitive(command.getType())
                     ? "Não encontrei " + command.getTarget()
                             + " nas conversas recentes nem nos contatos."
                     : "Não encontrei " + command.getTarget() + ".");
@@ -405,8 +551,17 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     private void completePhoneAction(AssistantCommand command, String label, String phone) {
-        if (command.getType() == AssistantCommand.Type.WHATSAPP_CALL) {
-            openWhatsAppCall(label, phone);
+        if (isWhatsAppSensitive(command.getType())) {
+            PendingSensitiveAction pending = pendingSensitiveAction;
+            if (pending == null) pending = new PendingSensitiveAction(command,
+                    DialogueStage.CONFIRMATION);
+            pending.command = command;
+            pending.stage = DialogueStage.CONFIRMATION;
+            pending.label = label;
+            pending.phone = phone;
+            pending.recentConversation = false;
+            pendingSensitiveAction = pending;
+            askConfirmation(pending);
         } else if (command.getType() == AssistantCommand.Type.DIAL) {
             Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
             respondAndStart("Discador para " + label + ".", intent);
@@ -417,6 +572,41 @@ public final class MainActivity extends Activity implements VoiceController.List
             }
             respondAndStart("Mensagem para " + label + ".", intent);
         }
+    }
+
+    private boolean isWhatsAppSensitive(AssistantCommand.Type type) {
+        return type == AssistantCommand.Type.WHATSAPP_CALL
+                || type == AssistantCommand.Type.WHATSAPP_SEND_MESSAGE
+                || type == AssistantCommand.Type.WHATSAPP_REPLY_MESSAGE;
+    }
+
+    private void askConfirmation(PendingSensitiveAction pending) {
+        String label = pending.label.isEmpty() ? pending.command.getTarget() : pending.label;
+        if (pending.command.getType() == AssistantCommand.Type.WHATSAPP_CALL) {
+            ask("Ligar para " + label + " pelo WhatsApp? Diga sim ou não.");
+        } else {
+            ask("Enviar para " + label + ": " + pending.command.getMessage()
+                    + ". Diga sim ou não.");
+        }
+    }
+
+    private void executeConfirmed(PendingSensitiveAction pending) {
+        AssistantCommand.Type type = pending.command.getType();
+        if (type == AssistantCommand.Type.WHATSAPP_CALL) {
+            if (pending.recentConversation) {
+                if (!WhatsAppNotificationService.openRecentConversation(pending.label)) {
+                    respond("A conversa não está mais disponível.");
+                } else status("Iniciando chamada pelo WhatsApp.");
+            } else openWhatsAppCall(pending.label, pending.phone);
+            return;
+        }
+        if (pending.recentConversation) {
+            boolean opened = WhatsAppNotificationService.openRecentConversation(
+                    pending.label, WhatsAppAccessibilityService.Action.SEND_MESSAGE,
+                    pending.command.getMessage());
+            if (opened) status("Enviando mensagem pelo WhatsApp.");
+            else respond("A conversa não está mais disponível.");
+        } else openWhatsAppMessage(pending.label, pending.phone, pending.command.getMessage());
     }
 
     private void openMap(String destination) {
@@ -519,14 +709,27 @@ public final class MainActivity extends Activity implements VoiceController.List
         Intent intent = new Intent(Intent.ACTION_VIEW,
                 Uri.parse("whatsapp://send?phone=" + digits));
         intent.setPackage("com.whatsapp");
-        String message = "Ligando para " + label + ".";
-        status(message);
-        voiceController.speakThen(message, () -> runOnUiThread(() -> {
-            // O prazo começa apenas quando o WhatsApp será aberto, não durante a fala.
-            WhatsAppAccessibilityService.requestAction(
-                    WhatsAppAccessibilityService.Action.CALL);
-            safeStart(intent);
-        }));
+        status("Iniciando chamada pelo WhatsApp.");
+        WhatsAppAccessibilityService.requestAction(WhatsAppAccessibilityService.Action.CALL);
+        safeStart(intent);
+    }
+
+    private void openWhatsAppMessage(String label, String phone, String message) {
+        String digits = phone.replaceAll("\\D", "");
+        if (!phone.trim().startsWith("+") && (digits.length() == 10 || digits.length() == 11)) {
+            digits = "55" + digits;
+        }
+        if (digits.length() < 10) {
+            respond("O contato " + label + " não tem um número utilizável.");
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(
+                "whatsapp://send?phone=" + digits + "&text=" + Uri.encode(message)));
+        intent.setPackage("com.whatsapp");
+        WhatsAppAccessibilityService.requestWhatsAppAction(
+                WhatsAppAccessibilityService.Action.SEND_MESSAGE, message);
+        status("Enviando mensagem pelo WhatsApp.");
+        safeStart(intent);
     }
 
     private void controlMedia(MediaActionController.Action action) {
@@ -584,6 +787,52 @@ public final class MainActivity extends Activity implements VoiceController.List
         });
     }
 
+    private void toggleConfiguration() {
+        boolean show = configurationPanel.getVisibility() != View.VISIBLE;
+        configurationPanel.setVisibility(show ? View.VISIBLE : View.GONE);
+        status(show ? "Configuração aberta." : "Configuração fechada.");
+    }
+
+    private void refreshCapabilities(boolean announce) {
+        worker.execute(() -> {
+            capabilityRegistry.refreshOnline();
+            InstalledAppRepository.ScanReport report = appRepository.scanCapabilities();
+            runOnUiThread(() -> {
+                String summary = report.installedApps + " apps encontrados; "
+                        + report.recognizedApps + " com capacidades específicas.";
+                appScanView.setText(summary);
+                if (announce) respond(summary);
+            });
+        });
+    }
+
+    private void requestAssistantRole() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            RoleManager manager = getSystemService(RoleManager.class);
+            if (manager == null || !manager.isRoleAvailable(RoleManager.ROLE_ASSISTANT)) {
+                respond("Este aparelho não oferece a escolha de assistente padrão.");
+                return;
+            }
+            if (manager.isRoleHeld(RoleManager.ROLE_ASSISTANT)) {
+                respond("O GuiaVoz já é o assistente padrão.");
+                return;
+            }
+            startActivityForResult(manager.createRequestRoleIntent(RoleManager.ROLE_ASSISTANT),
+                    REQUEST_ASSISTANT_ROLE);
+        } else {
+            respondAndStart("Escolha o GuiaVoz como aplicativo de assistência.",
+                    new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS));
+        }
+    }
+
+    private void ask(String question) {
+        status(question);
+        voiceController.speakThen(question, () -> runOnUiThread(() -> {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED) startVoiceCommand();
+        }));
+    }
+
     private void respondAndStart(String message, Intent intent) {
         status(message);
         voiceController.speakThen(message, () -> runOnUiThread(() -> safeStart(intent)));
@@ -604,6 +853,26 @@ public final class MainActivity extends Activity implements VoiceController.List
     private void respond(String message) {
         status(message);
         voiceController.speak(message);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ASSISTANT_ROLE) {
+            respond(resultCode == RESULT_OK
+                    ? "GuiaVoz definido como assistente padrão."
+                    : "A escolha de assistente não foi alterada.");
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (Intent.ACTION_ASSIST.equals(intent.getAction())
+                || Intent.ACTION_VOICE_COMMAND.equals(intent.getAction())) {
+            statusView.post(this::startVoiceCommand);
+        }
     }
 
     @Override

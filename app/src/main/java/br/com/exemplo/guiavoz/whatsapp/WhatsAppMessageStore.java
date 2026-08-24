@@ -101,6 +101,11 @@ public final class WhatsAppMessageStore {
         return null;
     }
 
+    public static synchronized String latestSender(Context context) {
+        List<Message> messages = read(context);
+        return messages.isEmpty() ? "" : messages.get(0).sender;
+    }
+
     public static synchronized void markAnnounced(Context context, List<String> ids) {
         updateStates(context, ids, State.ANNOUNCED, true);
     }

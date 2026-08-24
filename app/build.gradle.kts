@@ -10,8 +10,8 @@ android {
         applicationId = "br.com.exemplo.guiavoz"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.4.0"
+        versionCode = 7
+        versionName = "0.5.0"
 
         testInstrumentationRunner = "android.app.Instrumentation"
     }
@@ -33,5 +33,6 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.material:material:1.12.0")
     testImplementation("junit:junit:4.13.2")
 }

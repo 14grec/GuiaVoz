@@ -284,3 +284,51 @@ toque no controle que diz pesquisar,TAP_ELEMENT
 clique no elemento com o texto confirmar,TAP_ELEMENT
 selecione o botao chamado continuar,TAP_ELEMENT
 aperte a opcao identificada como entrar,TAP_ELEMENT
+leia o conteudo sem reproduzir os audios,WHATSAPP_MESSAGES
+fale somente os textos nao toque os audios,WHATSAPP_MESSAGES
+conte as mensagens mas deixe os audios parados,WHATSAPP_MESSAGES
+quero ler o que chegou sem ouvir mensagem de voz,WHATSAPP_MESSAGES
+diga os textos recebidos sem executar os audios,WHATSAPP_MESSAGES
+leia a mensagem que joao enviou,WHATSAPP_MESSAGES
+o que maria enviou para mim por mensagem,WHATSAPP_MESSAGES
+mostre a mensagem enviada por carlos,WHATSAPP_MESSAGES
+fale o texto que ana acabou de enviar,WHATSAPP_MESSAGES
+quero saber qual mensagem paulo enviou,WHATSAPP_MESSAGES
+fale os textos e depois toque os recados de voz,WHATSAPP_LISTEN_MESSAGES
+leia primeiro os textos depois reproduza os audios,WHATSAPP_LISTEN_MESSAGES
+conte as mensagens e em seguida execute os audios,WHATSAPP_LISTEN_MESSAGES
+quero os textos seguidos das mensagens de voz,WHATSAPP_LISTEN_MESSAGES
+leia tudo e ao final toque cada audio,WHATSAPP_LISTEN_MESSAGES
+comece pelos textos e continue com os audios,WHATSAPP_LISTEN_MESSAGES
+fale o que escreveram e depois reproduza o que gravaram,WHATSAPP_LISTEN_MESSAGES
+leia as mensagens depois escute os recados de voz,WHATSAPP_LISTEN_MESSAGES
+mande uma mensagem no whatsapp para joao,WHATSAPP_SEND_MESSAGE
+envie uma mensagem para maria pelo whatsapp,WHATSAPP_SEND_MESSAGE
+quero mandar mensagem para carlos no zap,WHATSAPP_SEND_MESSAGE
+escreva para ana no whats dizendo estou chegando,WHATSAPP_SEND_MESSAGE
+avise paulo pelo whatsapp que vou atrasar,WHATSAPP_SEND_MESSAGE
+mande no zap para fernanda dizendo tudo bem,WHATSAPP_SEND_MESSAGE
+envia um whatsapp para lucas com a mensagem obrigado,WHATSAPP_SEND_MESSAGE
+quero escrever uma mensagem de whatsapp,WHATSAPP_SEND_MESSAGE
+preciso enviar uma mensagem pelo whats,WHATSAPP_SEND_MESSAGE
+mandar para minha mae no whatsapp que cheguei,WHATSAPP_SEND_MESSAGE
+fale para marcos pelo zap que estou na porta,WHATSAPP_SEND_MESSAGE
+envie pelo whatsapp ao consultorio dizendo quero remarcar,WHATSAPP_SEND_MESSAGE
+mensagem no whatsapp para bia dizendo bom dia,WHATSAPP_SEND_MESSAGE
+manda um recado escrito no zap para pedro,WHATSAPP_SEND_MESSAGE
+quero enviar texto para beatriz no whatsapp,WHATSAPP_SEND_MESSAGE
+responda a mensagem do whatsapp,WHATSAPP_REPLY_MESSAGE
+responda ao joao dizendo estou chegando,WHATSAPP_REPLY_MESSAGE
+quero responder a maria no zap,WHATSAPP_REPLY_MESSAGE
+responda no whatsapp que esta tudo bem,WHATSAPP_REPLY_MESSAGE
+retorne para carlos pelo whats dizendo obrigado,WHATSAPP_REPLY_MESSAGE
+responde a ultima mensagem com bom dia,WHATSAPP_REPLY_MESSAGE
+quero responder quem acabou de falar comigo,WHATSAPP_REPLY_MESSAGE
+mande uma resposta para ana no whatsapp,WHATSAPP_REPLY_MESSAGE
+responda essa conversa dizendo que sim,WHATSAPP_REPLY_MESSAGE
+responda o ultimo contato no zap,WHATSAPP_REPLY_MESSAGE
+escreva uma resposta no whatsapp,WHATSAPP_REPLY_MESSAGE
+retorne a mensagem de paulo dizendo depois eu ligo,WHATSAPP_REPLY_MESSAGE
+responda ao recado da fernanda pelo whats,WHATSAPP_REPLY_MESSAGE
+responde para lucas que eu entendi,WHATSAPP_REPLY_MESSAGE
+quero retornar essa mensagem pelo whatsapp,WHATSAPP_REPLY_MESSAGE

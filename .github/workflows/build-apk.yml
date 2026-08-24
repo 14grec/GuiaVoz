@@ -59,14 +59,14 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publicar versão 0.4.0
+      - name: Publicar versão 0.5.0
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v0.4.0 >/dev/null 2>&1 || \
-            gh release create v0.4.0 \
-              --title "GuiaVoz 0.4.0 — cérebro local" \
-              --notes "Rede neural offline treinável, 24 intenções, memória de mensagens e áudios, leitura agrupada por remetente e navegação assistiva experimental em outros aplicativos."
-          gh release upload v0.4.0 \
-            "app/build/outputs/apk/debug/app-debug.apk#GuiaVoz-v0.4.0.apk" \
+          gh release view v0.5.0 >/dev/null 2>&1 || \
+            gh release create v0.5.0 \
+              --title "GuiaVoz 0.5.0 — diálogo e capacidades" \
+              --notes "Cérebro hierárquico treinado antes da compilação, envio e resposta no WhatsApp com confirmação, registro local de erros, scanner de apps, registro online de capacidades, papel de assistente padrão e interface Material 3."
+          gh release upload v0.5.0 \
+            "app/build/outputs/apk/debug/app-debug.apk#GuiaVoz-v0.5.0.apk" \
             --clobber

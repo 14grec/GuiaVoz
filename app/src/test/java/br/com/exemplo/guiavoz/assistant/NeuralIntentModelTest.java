@@ -31,4 +31,16 @@ public final class NeuralIntentModelTest {
         assertEquals("neural", command.getSource());
         assertTrue(command.getTarget().toLowerCase().contains("pesquisar"));
     }
+
+    @Test
+    public void hierarchicalHeadsSeparateSendFromRead() throws Exception {
+        NeuralIntentModel.Prediction send = load().predict(
+                "Quero mandar uma mensagem para Pedro no WhatsApp");
+        assertEquals("SEND", send.action);
+        assertEquals("MESSAGE", send.object);
+        assertEquals("WHATSAPP", send.channel);
+        NeuralIntentModel.Prediction read = load().predict(
+                "Quero saber se chegaram mensagens no WhatsApp");
+        assertEquals("READ", read.action);
+    }
 }

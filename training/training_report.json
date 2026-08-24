@@ -1,12 +1,21 @@
 {
-  "examples": 285,
-  "intents": 24,
-  "train_examples": 285,
-  "augmented_train_examples": 5593,
-  "test_examples": 48,
-  "accuracy": 0.9375,
-  "mean_confidence": 0.8816986083984375,
-  "min_confidence": 0.3590737581253052,
+  "examples": 333,
+  "intents": 26,
+  "train_examples": 333,
+  "augmented_train_examples": 7653,
+  "test_examples": 61,
+  "accuracy": 1.0,
+  "raw_structured_accuracy": 0.819672131147541,
+  "intent_accuracy": 1.0,
+  "critical_whatsapp_accuracy": 1.0,
+  "head_accuracy": {
+    "action": 0.9180327868852459,
+    "object": 0.9016393442622951,
+    "channel": 0.8688524590163934,
+    "intent": 1.0
+  },
+  "mean_confidence": 0.8660938739776611,
+  "min_confidence": 0.4200045168399811,
   "classification": {
     "ACCESSIBILITY_SETTINGS": {
       "precision": 1.0,
@@ -52,8 +61,8 @@
     },
     "MEDIA_NEXT": {
       "precision": 1.0,
-      "recall": 0.5,
-      "f1-score": 0.6666666666666666,
+      "recall": 1.0,
+      "f1-score": 1.0,
       "support": 2.0
     },
     "MEDIA_PAUSE": {
@@ -136,66 +145,65 @@
     },
     "WHATSAPP_CALL": {
       "precision": 1.0,
-      "recall": 0.5,
-      "f1-score": 0.6666666666666666,
+      "recall": 1.0,
+      "f1-score": 1.0,
       "support": 2.0
     },
     "WHATSAPP_LISTEN_MESSAGES": {
-      "precision": 0.5,
-      "recall": 0.5,
-      "f1-score": 0.5,
-      "support": 2.0
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 3.0
     },
     "WHATSAPP_MESSAGES": {
-      "precision": 0.5,
+      "precision": 1.0,
       "recall": 1.0,
-      "f1-score": 0.6666666666666666,
-      "support": 2.0
+      "f1-score": 1.0,
+      "support": 4.0
     },
-    "accuracy": 0.9375,
+    "WHATSAPP_REPLY_MESSAGE": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 5.0
+    },
+    "WHATSAPP_SEND_MESSAGE": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 5.0
+    },
+    "accuracy": 1.0,
     "macro avg": {
-      "precision": 0.9583333333333334,
-      "recall": 0.9375,
-      "f1-score": 0.9375,
-      "support": 48.0
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 61.0
     },
     "weighted avg": {
-      "precision": 0.9583333333333334,
-      "recall": 0.9375,
-      "f1-score": 0.9375,
-      "support": 48.0
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 61.0
     }
   },
-  "errors": [
-    {
-      "text": "fale os textos e depois os recados de voz",
-      "expected": "WHATSAPP_LISTEN_MESSAGES",
-      "predicted": "WHATSAPP_MESSAGES",
-      "confidence": 0.984050452709198
-    },
-    {
-      "text": "fale com beatriz usando a ligacao do whats",
-      "expected": "WHATSAPP_CALL",
-      "predicted": "WHATSAPP_MESSAGES",
-      "confidence": 0.5601915717124939
-    },
-    {
-      "text": "passe esta musica e coloque outra",
-      "expected": "MEDIA_NEXT",
-      "predicted": "WHATSAPP_LISTEN_MESSAGES",
-      "confidence": 0.8356297612190247
-    }
-  ],
+  "errors": [],
   "model": {
-    "kind": "hashed-character-ngram-mlp",
+    "kind": "hierarchical-multi-head-character-ngram-mlp",
     "input_dim": 768,
-    "hidden_layers": [
+    "heads": {
+      "action": 19,
+      "object": 13,
+      "channel": 6,
+      "intent": 26
+    },
+    "hidden_layers_per_head": [
       128
     ],
     "ngram_range": [
       2,
       5
     ],
-    "parameters": 101528
+    "parameters": 401984
   }
 }
