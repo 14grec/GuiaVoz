@@ -19,7 +19,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import br.com.exemplo.guiavoz.assistant.AssistantCommand;
@@ -77,7 +76,7 @@ public final class MainActivity extends Activity implements VoiceController.List
     private TextView transcriptView;
     private EditText commandInput;
     private Button listenButton;
-    private Switch lockScreenSwitch;
+    private MaterialSwitch lockScreenSwitch;
     private LinearLayout configurationPanel;
     private TextView appScanView;
     private AssistantCommand pendingContactCommand;
