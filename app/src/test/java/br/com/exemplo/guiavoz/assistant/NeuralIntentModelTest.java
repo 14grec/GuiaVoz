@@ -20,7 +20,7 @@ public final class NeuralIntentModelTest {
         NeuralIntentModel.Prediction prediction = load().predict(
                 "Coloque para tocar o que recebi em áudio");
         assertEquals("PLAY_WHATSAPP_AUDIO", prediction.label);
-        assertTrue(prediction.confidence > 0.58f);
+        assertTrue(prediction.intentConfidence > 0.58f);
     }
 
     @Test

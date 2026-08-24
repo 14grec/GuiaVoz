@@ -23,7 +23,8 @@ public final class CommandParser {
             "ouvir", "ouca", "escutar", "escute", "rodar", "rode"
     ));
     private static final Set<String> READ_ACTIONS = new HashSet<>(Arrays.asList(
-            "ler", "leia", "listar", "liste", "mostrar", "mostre"
+            "ler", "leia", "listar", "liste", "mostrar", "mostre", "verificar",
+            "verifique", "consultar", "consulte"
     ));
     private static final Set<String> LISTEN_ACTIONS = new HashSet<>(Arrays.asList(
             "ouvir", "ouca", "escutar", "escute"
