@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import br.com.exemplo.guiavoz.assistant.AssistantCommand;
 import br.com.exemplo.guiavoz.assistant.CommandParser;
+import br.com.exemplo.guiavoz.assistant.NeuralIntentModel;
 import br.com.exemplo.guiavoz.assistant.PhoneTextParser;
 import br.com.exemplo.guiavoz.data.ContactRepository;
 import br.com.exemplo.guiavoz.data.InstalledAppRepository;
@@ -32,9 +33,14 @@ import br.com.exemplo.guiavoz.whatsapp.WhatsAppMessageStore;
 import br.com.exemplo.guiavoz.whatsapp.WhatsAppNotificationService;
 
 import java.text.DateFormat;
+import java.io.IOException;
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -42,8 +48,8 @@ import java.util.stream.Collectors;
 public final class MainActivity extends Activity implements VoiceController.Listener {
     private static final int REQUEST_MICROPHONE = 10;
     private static final int REQUEST_CONTACTS = 11;
-    private static final String HELP_TEXT = "Diga: ouvir mensagens, reproduzir áudios do WhatsApp, "
-            + "ligar para Maria no WhatsApp, abrir Spotify, pausar música ou que horas são.";
+    private static final String HELP_TEXT = "Diga: ouvir mensagens, próximo áudio, repetir áudio, "
+            + "ligar para Maria no WhatsApp, abrir Spotify, ler esta tela ou tocar em pesquisar.";
     private static final int COLOR_BACKGROUND = Color.rgb(244, 247, 249);
     private static final int COLOR_SURFACE = Color.WHITE;
     private static final int COLOR_PRIMARY = Color.rgb(14, 91, 103);
@@ -51,7 +57,7 @@ public final class MainActivity extends Activity implements VoiceController.List
     private static final int COLOR_ACCENT = Color.rgb(31, 138, 112);
     private static final int COLOR_TEXT_MUTED = Color.rgb(78, 96, 104);
 
-    private final CommandParser parser = new CommandParser();
+    private CommandParser parser;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private VoiceController voiceController;
     private ContactRepository contactRepository;
@@ -68,6 +74,7 @@ public final class MainActivity extends Activity implements VoiceController.List
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(createInterface());
+        parser = loadCommandParser();
         contactRepository = new ContactRepository(getContentResolver());
         appRepository = new InstalledAppRepository(this);
         mediaController = new MediaActionController(this);
@@ -75,19 +82,23 @@ public final class MainActivity extends Activity implements VoiceController.List
 
         listenButton.setOnClickListener(view -> startVoiceCommand());
         findViewById(1002).setOnClickListener(view -> runTypedCommand());
-        findViewById(1003).setOnClickListener(view -> respond(HELP_TEXT));
         findViewById(1005).setOnClickListener(view -> openNotificationSettings());
         findViewById(1006).setOnClickListener(view -> openAccessibilitySettings());
-        findViewById(1010).setOnClickListener(view -> execute(
-                new AssistantCommand(AssistantCommand.Type.WHATSAPP_LISTEN_MESSAGES, "", "", "")));
-        findViewById(1011).setOnClickListener(view -> execute(
-                new AssistantCommand(AssistantCommand.Type.PLAY_WHATSAPP_AUDIO, "", "", "")));
         lockScreenSwitch.setOnCheckedChangeListener((button, enabled) ->
                 getSharedPreferences(WhatsAppAccessibilityService.PREFERENCES, MODE_PRIVATE)
                         .edit().putBoolean(WhatsAppAccessibilityService.LOCK_SCREEN_AFTER_AUDIO,
                                 enabled).apply());
 
         statusView.post(() -> status(getString(R.string.status_ready)));
+    }
+
+    private CommandParser loadCommandParser() {
+        try {
+            return new CommandParser(NeuralIntentModel.load(
+                    getAssets().open("guiavoz_brain.bin")));
+        } catch (IOException | RuntimeException error) {
+            return new CommandParser();
+        }
     }
 
     private View createInterface() {
@@ -132,16 +143,8 @@ public final class MainActivity extends Activity implements VoiceController.List
         statusCard.addView(transcriptView, matchWrap());
         content.addView(statusCard, cardParams());
 
-        LinearLayout quickCard = card();
-        quickCard.addView(sectionTitle("Ações rápidas"), matchWrap());
-        quickCard.addView(secondaryButton(1010, "Ouvir mensagens",
-                "Lê textos e reproduz o áudio mais recente"), matchWrap());
-        quickCard.addView(secondaryButton(1011, "Reproduzir último áudio",
-                "Reproduz o áudio mais recente do WhatsApp"), matchWrap());
-        content.addView(quickCard, cardParams());
-
         LinearLayout testCard = card();
-        testCard.addView(sectionTitle("Testar por texto"), matchWrap());
+        testCard.addView(sectionTitle("Testar o cérebro"), matchWrap());
 
         commandInput = new EditText(this);
         commandInput.setTextSize(19);
@@ -161,7 +164,7 @@ public final class MainActivity extends Activity implements VoiceController.List
         content.addView(testCard, cardParams());
 
         LinearLayout settingsCard = card();
-        settingsCard.addView(sectionTitle("Acessos e preferências"), matchWrap());
+        settingsCard.addView(sectionTitle("Permissões e preferências"), matchWrap());
         lockScreenSwitch = new Switch(this);
         lockScreenSwitch.setText("Bloquear tela ao reproduzir áudio");
         lockScreenSwitch.setTextSize(18);
@@ -177,8 +180,6 @@ public final class MainActivity extends Activity implements VoiceController.List
                 "Permite ler notificações do WhatsApp"), matchWrap());
         settingsCard.addView(secondaryButton(1006, getString(R.string.whatsapp_accessibility),
                 "Permite controlar chamadas e áudios do WhatsApp"), matchWrap());
-        settingsCard.addView(secondaryButton(1003, getString(R.string.help),
-                "Fala exemplos de comandos"), matchWrap());
         content.addView(settingsCard, cardParams());
 
         ScrollView scroll = new ScrollView(this);
@@ -321,10 +322,30 @@ public final class MainActivity extends Activity implements VoiceController.List
             case WHATSAPP_LISTEN_MESSAGES -> readWhatsAppMessages(true);
             case WHATSAPP_CALL -> callWhatsApp(command);
             case PLAY_WHATSAPP_AUDIO -> playLatestWhatsAppAudio();
+            case PLAY_NEXT_AUDIO -> playNextWhatsAppAudio();
+            case REPEAT_AUDIO -> repeatWhatsAppAudio();
+            case CONTINUE_SESSION -> readWhatsAppMessages(true);
             case MEDIA_PLAY -> controlMedia(MediaActionController.Action.PLAY);
             case MEDIA_PAUSE -> controlMedia(MediaActionController.Action.PAUSE);
             case MEDIA_NEXT -> controlMedia(MediaActionController.Action.NEXT);
+            case READ_SCREEN -> navigate(WhatsAppAccessibilityService.Action.READ_SCREEN, "");
+            case TAP_ELEMENT -> navigate(WhatsAppAccessibilityService.Action.TAP_ELEMENT,
+                    command.getTarget());
+            case TYPE_TEXT -> navigate(WhatsAppAccessibilityService.Action.TYPE_TEXT,
+                    command.getMessage());
+            case SCROLL_DOWN -> navigate(WhatsAppAccessibilityService.Action.SCROLL_DOWN, "");
+            case SCROLL_UP -> navigate(WhatsAppAccessibilityService.Action.SCROLL_UP, "");
+            case BACK -> navigate(WhatsAppAccessibilityService.Action.BACK, "");
             case UNKNOWN -> respond("Não entendi. Diga ajuda para ouvir exemplos.");
+        }
+    }
+
+    private void navigate(WhatsAppAccessibilityService.Action action, String target) {
+        voiceController.stopSpeaking();
+        if (WhatsAppAccessibilityService.requestNavigation(action, target)) {
+            status("Executando comando na tela anterior.");
+        } else {
+            respond("Ative o GuiaVoz nos ajustes de acessibilidade.");
         }
     }
 
@@ -419,36 +440,70 @@ public final class MainActivity extends Activity implements VoiceController.List
     }
 
     private void readWhatsAppMessages(boolean playAudio) {
-        List<WhatsAppMessageStore.Message> messages = WhatsAppMessageStore.read(this);
+        List<WhatsAppMessageStore.Message> messages = WhatsAppMessageStore.readNew(this);
         if (messages.isEmpty()) {
             respond("Nenhuma mensagem nova.");
             return;
         }
-        List<WhatsAppMessageStore.Message> recent = messages.stream().limit(4)
+        List<WhatsAppMessageStore.Message> recent = messages.stream().limit(12)
                 .collect(Collectors.toList());
-        String count = recent.size() == 1 ? "Uma mensagem nova. "
-                : recent.size() + " mensagens novas. ";
-        String spoken = recent.stream().map(item -> item.audio
-                ? "Áudio de " + item.sender + "."
-                : item.sender + " disse: " + item.text + ".")
-                .collect(Collectors.joining(" "));
+        recent.sort(Comparator.comparingLong(item -> item.timestamp));
+        String response = groupMessagesForSpeech(recent);
         boolean hasAudio = recent.stream().anyMatch(item -> item.audio);
-        String response = count + spoken;
-        if (playAudio && hasAudio) {
-            status(response);
-            voiceController.speakThen(response,
-                    () -> runOnUiThread(this::playLatestWhatsAppAudio));
-        } else {
-            respond(response);
+        List<String> announcedIds = recent.stream().map(item -> item.id)
+                .collect(Collectors.toList());
+        status(response);
+        voiceController.speakThen(response, () -> runOnUiThread(() -> {
+            WhatsAppMessageStore.markAnnounced(this, announcedIds);
+            if (playAudio && hasAudio) playNextWhatsAppAudio();
+        }));
+    }
+
+    private String groupMessagesForSpeech(List<WhatsAppMessageStore.Message> messages) {
+        Map<String, List<WhatsAppMessageStore.Message>> grouped = new LinkedHashMap<>();
+        for (WhatsAppMessageStore.Message message : messages) {
+            grouped.computeIfAbsent(message.sender, ignored -> new ArrayList<>()).add(message);
         }
+        List<String> groups = new ArrayList<>();
+        for (Map.Entry<String, List<WhatsAppMessageStore.Message>> entry : grouped.entrySet()) {
+            List<String> contents = new ArrayList<>();
+            int audios = 0;
+            for (WhatsAppMessageStore.Message message : entry.getValue()) {
+                if (message.audio) audios++;
+                else contents.add(message.text);
+            }
+            if (audios == 1) contents.add("um áudio");
+            else if (audios > 1) contents.add(audios + " áudios");
+            groups.add("Novas mensagens de " + entry.getKey() + ": "
+                    + String.join("; ", contents) + ".");
+        }
+        return String.join(" ", groups);
     }
 
     private void playLatestWhatsAppAudio() {
         voiceController.stopSpeaking();
-        if (WhatsAppNotificationService.openLatestAudio()) {
+        if (WhatsAppNotificationService.openNextAudio(this)) {
             status("Reproduzindo áudio.");
         } else {
             respond("Nenhum áudio recente.");
+        }
+    }
+
+    private void playNextWhatsAppAudio() {
+        voiceController.stopSpeaking();
+        if (WhatsAppNotificationService.openNextAudio(this)) {
+            status("Reproduzindo próximo áudio.");
+        } else {
+            respond("Nenhum áudio novo para ouvir.");
+        }
+    }
+
+    private void repeatWhatsAppAudio() {
+        voiceController.stopSpeaking();
+        if (WhatsAppNotificationService.repeatLastAudio(this)) {
+            status("Repetindo áudio.");
+        } else {
+            respond("Nenhum áudio anterior para repetir.");
         }
     }
 

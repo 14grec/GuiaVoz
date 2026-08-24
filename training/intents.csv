@@ -1,0 +1,286 @@
+text,intent
+me ajude,HELP
+quero saber o que voce faz,HELP
+quais comandos eu posso usar,HELP
+explique como usar o guia voz,HELP
+preciso de ajuda com os comandos,HELP
+o que eu posso pedir,HELP
+me diga suas funcoes,HELP
+como voce pode me ajudar,HELP
+fale alguns exemplos,HELP
+nao sei o que dizer,HELP
+que horas sao,TIME
+me diga as horas,TIME
+qual e o horario agora,TIME
+voce sabe que horas sao,TIME
+hora atual por favor,TIME
+informe o horario,TIME
+quero saber as horas,TIME
+fale a hora para mim,TIME
+agora sao quantas horas,TIME
+qual o horario neste momento,TIME
+abra o spotify,OPEN_APP
+quero usar o youtube,OPEN_APP
+inicie o aplicativo camera,OPEN_APP
+va para o instagram,OPEN_APP
+entre no banco inter,OPEN_APP
+abre o whatsapp,OPEN_APP
+quero entrar no maps,OPEN_APP
+iniciar aplicativo de musica,OPEN_APP
+coloque o navegador na tela,OPEN_APP
+pode abrir a calculadora,OPEN_APP
+quais aplicativos estao instalados,LIST_APPS
+liste meus aplicativos,LIST_APPS
+que apps eu tenho,LIST_APPS
+me diga os aplicativos disponiveis,LIST_APPS
+mostre a lista de apps,LIST_APPS
+quais programas posso abrir,LIST_APPS
+fale os aplicativos do celular,LIST_APPS
+listar os apps instalados,LIST_APPS
+o que esta instalado neste aparelho,LIST_APPS
+quero conhecer meus aplicativos,LIST_APPS
+ligue para maria,DIAL
+telefone para o joao,DIAL
+quero ligar para minha mae,DIAL
+disque para carlos alberto,DIAL
+faca uma ligacao para ana,DIAL
+chame o numero onze nove oito sete seis,DIAL
+preciso telefonar para paulo,DIAL
+ligacao para o consultorio,DIAL
+pode chamar a fernanda,DIAL
+quero falar por telefone com marcos,DIAL
+mande uma mensagem para joao dizendo estou chegando,SMS
+envie um sms para maria com a mensagem tudo bem,SMS
+mensagem para ana dizendo pode vir,SMS
+escreva para carlos que vou atrasar,SMS
+quero mandar uma mensagem para minha mae,SMS
+envia por sms para paulo,SMS
+avise a fernanda por mensagem que cheguei,SMS
+mande para marcos estou na porta,SMS
+enviar mensagem de texto ao consultorio,SMS
+escreva um sms para lucas dizendo obrigado,SMS
+abra o mapa para avenida paulista,MAP
+como chegar ao mercado central,MAP
+quero ir para a praca da se,MAP
+mostre o caminho ate minha casa,MAP
+navegue para o aeroporto,MAP
+procure no mapa rua sete de setembro,MAP
+tracar rota para o hospital,MAP
+me leve ate a rodoviaria,MAP
+mapa para governador valadares,MAP
+quero direcoes para o restaurante,MAP
+abra os ajustes de acessibilidade,ACCESSIBILITY_SETTINGS
+quero configurar a acessibilidade,ACCESSIBILITY_SETTINGS
+mostre as permissoes de acessibilidade,ACCESSIBILITY_SETTINGS
+va para configuracao de acessibilidade,ACCESSIBILITY_SETTINGS
+preciso ativar o servico assistivo,ACCESSIBILITY_SETTINGS
+abrir acessibilidade do celular,ACCESSIBILITY_SETTINGS
+onde ativo o controle de tela,ACCESSIBILITY_SETTINGS
+configurar o guia voz na acessibilidade,ACCESSIBILITY_SETTINGS
+mostre os servicos de acessibilidade,ACCESSIBILITY_SETTINGS
+quero dar permissao de acessibilidade,ACCESSIBILITY_SETTINGS
+leia minhas mensagens do whatsapp,WHATSAPP_MESSAGES
+quais mensagens novas chegaram,WHATSAPP_MESSAGES
+me diga as mensagens do zap,WHATSAPP_MESSAGES
+leia o que recebi no whats,WHATSAPP_MESSAGES
+quero saber quem mandou mensagem,WHATSAPP_MESSAGES
+fale minhas mensagens novas,WHATSAPP_MESSAGES
+ver mensagens recentes do whatsapp,WHATSAPP_MESSAGES
+o que escreveram para mim no zap,WHATSAPP_MESSAGES
+leia somente os textos recebidos,WHATSAPP_MESSAGES
+tem mensagem nova no whatsapp,WHATSAPP_MESSAGES
+ouca minhas mensagens do whatsapp,WHATSAPP_LISTEN_MESSAGES
+quero ouvir tudo que chegou,WHATSAPP_LISTEN_MESSAGES
+leia as mensagens e toque os audios,WHATSAPP_LISTEN_MESSAGES
+reproduza as mensagens novas,WHATSAPP_LISTEN_MESSAGES
+escute o que recebi no zap,WHATSAPP_LISTEN_MESSAGES
+ouvir textos e audios recebidos,WHATSAPP_LISTEN_MESSAGES
+quero escutar minhas mensagens recentes,WHATSAPP_LISTEN_MESSAGES
+conte e toque as mensagens do whatsapp,WHATSAPP_LISTEN_MESSAGES
+ouca a conversa nova inteira,WHATSAPP_LISTEN_MESSAGES
+ler e reproduzir o que chegou,WHATSAPP_LISTEN_MESSAGES
+ligue para maria pelo whatsapp,WHATSAPP_CALL
+faca uma chamada de whatsapp para joao,WHATSAPP_CALL
+quero falar com carlos no zap,WHATSAPP_CALL
+chame a ana pelo whats,WHATSAPP_CALL
+telefonar para minha mae via whatsapp,WHATSAPP_CALL
+ligacao de voz no zap para paulo,WHATSAPP_CALL
+use o whatsapp para ligar para fernanda,WHATSAPP_CALL
+fale com marcos por chamada do whats,WHATSAPP_CALL
+inicie uma chamada no whatsapp com lucas,WHATSAPP_CALL
+quero chamar o consultorio pelo zap,WHATSAPP_CALL
+toque meus audios do whatsapp,PLAY_WHATSAPP_AUDIO
+reproduza as mensagens de voz,PLAY_WHATSAPP_AUDIO
+quero escutar os audios novos,PLAY_WHATSAPP_AUDIO
+execute o audio que chegou,PLAY_WHATSAPP_AUDIO
+ouca os recados de voz do zap,PLAY_WHATSAPP_AUDIO
+tem audio para reproduzir,PLAY_WHATSAPP_AUDIO
+coloque a mensagem de voz para tocar,PLAY_WHATSAPP_AUDIO
+reproduzir audio recebido no whats,PLAY_WHATSAPP_AUDIO
+escute os audios que ainda nao ouvi,PLAY_WHATSAPP_AUDIO
+quero ouvir um recado de voz,PLAY_WHATSAPP_AUDIO
+toque o proximo audio,PLAY_NEXT_AUDIO
+ouca a proxima mensagem de voz,PLAY_NEXT_AUDIO
+proximo audio nao ouvido,PLAY_NEXT_AUDIO
+continue com outro audio,PLAY_NEXT_AUDIO
+reproduza o audio seguinte,PLAY_NEXT_AUDIO
+va para o proximo recado de voz,PLAY_NEXT_AUDIO
+tem mais algum audio para tocar,PLAY_NEXT_AUDIO
+ouvir o proximo que ainda falta,PLAY_NEXT_AUDIO
+avance para a mensagem de voz seguinte,PLAY_NEXT_AUDIO
+quero o proximo audio da fila,PLAY_NEXT_AUDIO
+repita o ultimo audio,REPEAT_AUDIO
+toque esse audio de novo,REPEAT_AUDIO
+quero ouvir novamente,REPEAT_AUDIO
+volte a mensagem de voz anterior,REPEAT_AUDIO
+reproduza outra vez o ultimo recado,REPEAT_AUDIO
+nao entendi o audio repita,REPEAT_AUDIO
+toque novamente o que acabei de ouvir,REPEAT_AUDIO
+repete esse recado de voz,REPEAT_AUDIO
+quero escutar o audio anterior,REPEAT_AUDIO
+recomece o ultimo audio,REPEAT_AUDIO
+continue de onde parou,CONTINUE_SESSION
+continue as mensagens,CONTINUE_SESSION
+retome a leitura,CONTINUE_SESSION
+pode prosseguir,CONTINUE_SESSION
+volte para a fila de mensagens,CONTINUE_SESSION
+continue ouvindo o que chegou,CONTINUE_SESSION
+retome a conversa anterior,CONTINUE_SESSION
+prossiga com as mensagens restantes,CONTINUE_SESSION
+quero continuar a sessao,CONTINUE_SESSION
+continue depois do audio,CONTINUE_SESSION
+continue a musica,MEDIA_PLAY
+volte a tocar,MEDIA_PLAY
+retome a reproducao,MEDIA_PLAY
+de play na musica,MEDIA_PLAY
+reproduza a faixa,MEDIA_PLAY
+pode continuar o som,MEDIA_PLAY
+toque a musica novamente,MEDIA_PLAY
+inicie a reproducao da midia,MEDIA_PLAY
+voltar com o audio do aplicativo,MEDIA_PLAY
+quero continuar ouvindo musica,MEDIA_PLAY
+pause a musica,MEDIA_PAUSE
+pare o som,MEDIA_PAUSE
+interrompa a reproducao,MEDIA_PAUSE
+de pause na faixa,MEDIA_PAUSE
+silencie a musica agora,MEDIA_PAUSE
+pare esse audio,MEDIA_PAUSE
+pausar a midia,MEDIA_PAUSE
+segure a reproducao,MEDIA_PAUSE
+quero parar a musica,MEDIA_PAUSE
+interrompa o que esta tocando,MEDIA_PAUSE
+pule para a proxima musica,MEDIA_NEXT
+proxima faixa,MEDIA_NEXT
+avance a musica,MEDIA_NEXT
+troque para a proxima,MEDIA_NEXT
+pule essa faixa,MEDIA_NEXT
+quero ouvir outra musica,MEDIA_NEXT
+passa para a musica seguinte,MEDIA_NEXT
+avance a reproducao,MEDIA_NEXT
+proximo som da lista,MEDIA_NEXT
+nao quero essa toque a proxima,MEDIA_NEXT
+leia esta tela,READ_SCREEN
+o que aparece na tela,READ_SCREEN
+me diga o que esta aberto,READ_SCREEN
+descreva a tela atual,READ_SCREEN
+quais elementos estao visiveis,READ_SCREEN
+fale os botoes desta pagina,READ_SCREEN
+leia tudo que esta aparecendo,READ_SCREEN
+onde estou no aplicativo,READ_SCREEN
+quero saber o que tem nesta tela,READ_SCREEN
+informe o conteudo da janela,READ_SCREEN
+toque em pesquisar,TAP_ELEMENT
+clique no botao continuar,TAP_ELEMENT
+selecione configuracoes,TAP_ELEMENT
+aperte confirmar,TAP_ELEMENT
+escolha a opcao mensagens,TAP_ELEMENT
+toque onde diz entrar,TAP_ELEMENT
+clique em proximo,TAP_ELEMENT
+selecione o campo de busca,TAP_ELEMENT
+aperte o botao enviar,TAP_ELEMENT
+toque na opcao meus pedidos,TAP_ELEMENT
+digite restaurante,TYPE_TEXT
+escreva meu nome no campo,TYPE_TEXT
+coloque avenida brasil,TYPE_TEXT
+insira o texto bom dia,TYPE_TEXT
+preencha com meu endereco,TYPE_TEXT
+digite joao na pesquisa,TYPE_TEXT
+escreva obrigado pela mensagem,TYPE_TEXT
+coloque o numero onze nove nove,TYPE_TEXT
+insira sao paulo no destino,TYPE_TEXT
+digite o que eu disser,TYPE_TEXT
+role para baixo,SCROLL_DOWN
+desca a tela,SCROLL_DOWN
+mostre o que tem mais abaixo,SCROLL_DOWN
+avance a pagina para baixo,SCROLL_DOWN
+continue descendo,SCROLL_DOWN
+va para a parte inferior,SCROLL_DOWN
+passe a lista para baixo,SCROLL_DOWN
+quero ver os itens seguintes,SCROLL_DOWN
+role a lista adiante,SCROLL_DOWN
+deslize para baixo,SCROLL_DOWN
+role para cima,SCROLL_UP
+suba a tela,SCROLL_UP
+mostre o que estava acima,SCROLL_UP
+volte a pagina para cima,SCROLL_UP
+continue subindo,SCROLL_UP
+va para a parte superior,SCROLL_UP
+passe a lista para cima,SCROLL_UP
+quero ver os itens anteriores,SCROLL_UP
+role a lista para tras,SCROLL_UP
+deslize para cima,SCROLL_UP
+volte,BACK
+retorne para a tela anterior,BACK
+va para a pagina de antes,BACK
+aperte voltar,BACK
+feche esta tela,BACK
+quero retornar,BACK
+saia desta pagina,BACK
+volte um passo,BACK
+retorne ao aplicativo anterior,BACK
+desfaca a navegacao,BACK
+me ensine a usar este assistente,HELP
+como devo conversar com o guia voz,HELP
+oriente me sobre o funcionamento,HELP
+nao entendi como pedir uma acao,HELP
+explique o que posso falar,HELP
+faca uma chamada comum para roberto,DIAL
+use o telefone normal para chamar patricia,DIAL
+ligacao telefonica para pedro sem whatsapp,DIAL
+quero falar com beatriz pelo telefone,DIAL
+disque o contato renato no celular,DIAL
+avise lucas por mensagem de texto que estou em casa,SMS
+escreva por texto para bia que esta tudo certo,SMS
+mande um recado sms dizendo vou chegar cedo,SMS
+comunique a ana por mensagem que estou bem,SMS
+envie para pedro o texto estou a caminho,SMS
+calcule uma rota ate a farmacia,MAP
+mostre direcoes para a prefeitura,MAP
+qual o caminho para a padaria,MAP
+localize a rota ate o centro,MAP
+encontre no mapa o posto de saude,MAP
+fale apenas o conteudo escrito que recebi,WHATSAPP_MESSAGES
+leia os textos mas nao reproduza os audios,WHATSAPP_MESSAGES
+quero somente as mensagens escritas,WHATSAPP_MESSAGES
+conte o que escreveram sem tocar voz,WHATSAPP_MESSAGES
+informe os textos novos e deixe os audios para depois,WHATSAPP_MESSAGES
+fale os textos e em seguida reproduza os audios,WHATSAPP_LISTEN_MESSAGES
+acompanhe toda a fila de mensagens recebidas,WHATSAPP_LISTEN_MESSAGES
+leia tudo e toque cada recado de voz na ordem,WHATSAPP_LISTEN_MESSAGES
+quero ouvir a sequencia completa do que chegou,WHATSAPP_LISTEN_MESSAGES
+passe pelos textos e audios novos,WHATSAPP_LISTEN_MESSAGES
+nao compreendi repita o audio,REPEAT_AUDIO
+repita o que acabou de tocar,REPEAT_AUDIO
+o recado nao ficou claro toque novamente,REPEAT_AUDIO
+quero escutar outra vez a mesma mensagem de voz,REPEAT_AUDIO
+volte e reproduza de novo esse audio,REPEAT_AUDIO
+retorne ao restante da leitura,CONTINUE_SESSION
+prossiga a partir do ponto salvo,CONTINUE_SESSION
+continue com os itens que ainda faltam,CONTINUE_SESSION
+retome a fila interrompida,CONTINUE_SESSION
+volte para as mensagens restantes,CONTINUE_SESSION
+pressione onde estiver escrito aceitar,TAP_ELEMENT
+toque no controle que diz pesquisar,TAP_ELEMENT
+clique no elemento com o texto confirmar,TAP_ELEMENT
+selecione o botao chamado continuar,TAP_ELEMENT
+aperte a opcao identificada como entrar,TAP_ELEMENT

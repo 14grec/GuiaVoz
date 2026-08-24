@@ -1,0 +1,201 @@
+{
+  "examples": 285,
+  "intents": 24,
+  "train_examples": 285,
+  "augmented_train_examples": 5593,
+  "test_examples": 48,
+  "accuracy": 0.9375,
+  "mean_confidence": 0.8816986083984375,
+  "min_confidence": 0.3590737581253052,
+  "classification": {
+    "ACCESSIBILITY_SETTINGS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "BACK": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "CONTINUE_SESSION": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "DIAL": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "HELP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "LIST_APPS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "MAP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "MEDIA_NEXT": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1-score": 0.6666666666666666,
+      "support": 2.0
+    },
+    "MEDIA_PAUSE": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "MEDIA_PLAY": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "OPEN_APP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "PLAY_NEXT_AUDIO": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "PLAY_WHATSAPP_AUDIO": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "READ_SCREEN": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "REPEAT_AUDIO": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "SCROLL_DOWN": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "SCROLL_UP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "SMS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "TAP_ELEMENT": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "TIME": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "TYPE_TEXT": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "WHATSAPP_CALL": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1-score": 0.6666666666666666,
+      "support": 2.0
+    },
+    "WHATSAPP_LISTEN_MESSAGES": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1-score": 0.5,
+      "support": 2.0
+    },
+    "WHATSAPP_MESSAGES": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 2.0
+    },
+    "accuracy": 0.9375,
+    "macro avg": {
+      "precision": 0.9583333333333334,
+      "recall": 0.9375,
+      "f1-score": 0.9375,
+      "support": 48.0
+    },
+    "weighted avg": {
+      "precision": 0.9583333333333334,
+      "recall": 0.9375,
+      "f1-score": 0.9375,
+      "support": 48.0
+    }
+  },
+  "errors": [
+    {
+      "text": "fale os textos e depois os recados de voz",
+      "expected": "WHATSAPP_LISTEN_MESSAGES",
+      "predicted": "WHATSAPP_MESSAGES",
+      "confidence": 0.984050452709198
+    },
+    {
+      "text": "fale com beatriz usando a ligacao do whats",
+      "expected": "WHATSAPP_CALL",
+      "predicted": "WHATSAPP_MESSAGES",
+      "confidence": 0.5601915717124939
+    },
+    {
+      "text": "passe esta musica e coloque outra",
+      "expected": "MEDIA_NEXT",
+      "predicted": "WHATSAPP_LISTEN_MESSAGES",
+      "confidence": 0.8356297612190247
+    }
+  ],
+  "model": {
+    "kind": "hashed-character-ngram-mlp",
+    "input_dim": 768,
+    "hidden_layers": [
+      128
+    ],
+    "ngram_range": [
+      2,
+      5
+    ],
+    "parameters": 101528
+  }
+}

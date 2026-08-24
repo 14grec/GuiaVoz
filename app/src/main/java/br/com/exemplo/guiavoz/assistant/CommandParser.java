@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class CommandParser {
+    private static final float NEURAL_THRESHOLD = 0.58f;
+    private static final float SENSITIVE_NEURAL_THRESHOLD = 0.80f;
+    private final NeuralIntentModel neuralModel;
     private static final Set<String> WHATSAPP_NAMES = new HashSet<>(Arrays.asList(
             "whatsapp", "whats", "zap"
     ));
@@ -41,7 +44,35 @@ public final class CommandParser {
             "iniciar ", "inicie "
     );
 
+    public CommandParser() {
+        this(null);
+    }
+
+    public CommandParser(NeuralIntentModel neuralModel) {
+        this.neuralModel = neuralModel;
+    }
+
     public AssistantCommand parse(String spokenText) {
+        String original = spokenText == null ? "" : spokenText.trim();
+        if (original.isEmpty()) return command(AssistantCommand.Type.UNKNOWN, "", "", original);
+        if (neuralModel != null) {
+            NeuralIntentModel.Prediction prediction = neuralModel.predict(original);
+            try {
+                AssistantCommand.Type type = AssistantCommand.Type.valueOf(prediction.label);
+                float threshold = isSensitive(type)
+                        ? SENSITIVE_NEURAL_THRESHOLD : NEURAL_THRESHOLD;
+                if (prediction.confidence >= threshold) {
+                    AssistantCommand learned = fromPrediction(type, original, prediction.confidence);
+                    if (learned != null) return learned;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // Um modelo mais novo nunca pode derrubar uma versão antiga do executor.
+            }
+        }
+        return parseByRules(original);
+    }
+
+    private AssistantCommand parseByRules(String spokenText) {
         String original = spokenText == null ? "" : spokenText.trim();
         String normalized = TextNormalizer.normalize(original);
 
@@ -145,6 +176,75 @@ public final class CommandParser {
         }
 
         return command(AssistantCommand.Type.UNKNOWN, "", "", original);
+    }
+
+    private AssistantCommand fromPrediction(AssistantCommand.Type type, String original,
+                                            float confidence) {
+        AssistantCommand rules = parseByRules(original);
+        if (rules.getType() == type) {
+            return neuralCommand(type, rules.getTarget(), rules.getMessage(), original, confidence);
+        }
+        return switch (type) {
+            case WHATSAPP_CALL -> neuralCommand(type, extractWhatsAppCallTarget(original), "",
+                    original, confidence);
+            case OPEN_APP -> withRequiredTarget(type,
+                    stripIntentWords(original, "abrir", "abre", "abra", "iniciar", "inicie",
+                            "aplicativo", "app", "programa", "quero", "usar", "entrar", "no", "na"),
+                    "", original, confidence);
+            case DIAL -> withRequiredTarget(type,
+                    stripIntentWords(original, "ligar", "ligue", "telefone", "telefonar", "chamar",
+                            "chame", "ligacao", "chamada", "normal", "comum", "para", "pelo", "use", "o"),
+                    "", original, confidence);
+            case MAP -> withRequiredTarget(type,
+                    stripIntentWords(original, "mapa", "rota", "caminho", "direcoes", "localize",
+                            "localizar", "mostre", "calcule", "encontre", "para", "ate", "a", "ao"),
+                    "", original, confidence);
+            case TAP_ELEMENT -> withRequiredTarget(type,
+                    stripIntentWords(original, "toque", "tocar", "clique", "clicar", "aperte",
+                            "pressione", "selecione", "escolha", "botao", "controle", "elemento",
+                            "opcao", "onde", "esta", "estiver", "escrito", "diz", "chamado", "em", "no", "na"),
+                    "", original, confidence);
+            case TYPE_TEXT -> withRequiredTarget(type, "",
+                    stripIntentWords(original, "digite", "digitar", "escreva", "escrever", "insira",
+                            "inserir", "coloque", "preencha", "campo", "pesquisa", "com", "o", "a", "no", "na"),
+                    original, confidence);
+            case SMS -> rules.getType() == AssistantCommand.Type.UNKNOWN ? null
+                    : neuralCommand(type, rules.getTarget(), rules.getMessage(), original, confidence);
+            default -> neuralCommand(type, "", "", original, confidence);
+        };
+    }
+
+    private AssistantCommand withRequiredTarget(AssistantCommand.Type type, String target,
+                                                String message, String original, float confidence) {
+        String required = type == AssistantCommand.Type.TYPE_TEXT ? message : target;
+        if (required.trim().isEmpty()) return null;
+        return neuralCommand(type, target, message, original, confidence);
+    }
+
+    private AssistantCommand neuralCommand(AssistantCommand.Type type, String target,
+                                           String message, String original, float confidence) {
+        return new AssistantCommand(type, target, message, original, confidence, "neural");
+    }
+
+    private boolean isSensitive(AssistantCommand.Type type) {
+        return type == AssistantCommand.Type.DIAL
+                || type == AssistantCommand.Type.SMS
+                || type == AssistantCommand.Type.WHATSAPP_CALL;
+    }
+
+    private String stripIntentWords(String original, String... ignoredWords) {
+        Set<String> ignored = new HashSet<>();
+        ignored.addAll(Arrays.asList(ignoredWords));
+        String[] originalWords = original.trim().split("\\s+");
+        String[] normalizedWords = TextNormalizer.normalize(original).split(" ");
+        StringBuilder result = new StringBuilder();
+        int count = Math.min(originalWords.length, normalizedWords.length);
+        for (int index = 0; index < count; index++) {
+            if (ignored.contains(normalizedWords[index])) continue;
+            if (result.length() > 0) result.append(' ');
+            result.append(originalWords[index]);
+        }
+        return result.toString().trim();
     }
 
     private AssistantCommand command(

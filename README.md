@@ -2,18 +2,18 @@
 
 Protótipo nativo em Java para testar uma interface por voz voltada a pessoas com deficiência visual. O app reconhece comandos em português do Brasil, responde por síntese de fala e delega ações a outros apps com `Intent`.
 
-## Versão 0.3.0 — interação rápida e interface renovada
+## Versão 0.4.0 — cérebro neural local
 
-- Respostas faladas curtas, TTS mais rápido e status detalhado somente na tela.
-- Parser por famílias de verbos: entende **ouvir**, **escutar**, **tocar**, **reproduzir** e **executar**.
-- “Ouvir minhas mensagens”: lê até quatro mensagens e reproduz o áudio recente sem sobrepor a voz do GuiaVoz.
-- “Reproduzir áudios do WhatsApp”: abre a última mensagem de voz e toca em **Reproduzir**.
-- “Ligar para Maria no WhatsApp”: procura primeiro nas conversas recentes e depois nos contatos do Android.
-- “Pausar música”, “Continuar música” e “Próxima faixa”: controla uma sessão de mídia ativa em segundo plano.
-- Opção para bloquear a tela depois que o áudio do WhatsApp começar.
-- Nova interface em cartões, alto contraste, áreas de toque grandes e ações rápidas.
+- Rede neural offline treinada para 24 intenções, com confiança e saída estruturada.
+- Corpus local em português, avaliação separada e treinamento reproduzível em Python.
+- Fallback determinístico quando a confiança neural não é suficiente.
+- Mensagens novas agrupadas: **“Novas mensagens de João: texto um; texto dois.”**
+- Estado local de áudio novo, solicitado e ouvido, com **próximo áudio** e **repetir áudio**.
+- Leitura conjunta de textos e áudios sem a voz do GuiaVoz sobrepor a reprodução.
+- Navegação assistiva experimental: ler tela, tocar em elemento, digitar, rolar e voltar.
+- Interface reduzida para fala, teste do cérebro, permissões e preferências.
 
-Na primeira execução, use **Acesso às notificações** e **Controle do WhatsApp**. O Android exige que a pessoa habilite manualmente os dois serviços. O serviço de acessibilidade é restrito a `com.whatsapp`, só executa uma ação após comando explícito e cancela a ação se o WhatsApp não responder dentro do prazo.
+Na primeira execução, use **Acesso às notificações** e **Navegação por voz**. O Android exige que a pessoa habilite manualmente os dois serviços. O serviço de acessibilidade só executa uma ação após comando explícito, ignora campos de senha, bloqueia alvos sensíveis genéricos e cancela a ação quando ela expira.
 
 O WhatsApp não oferece API pública para histórico, chamadas ou reprodução de áudios. A leitura cobre apenas notificações recebidas após a ativação. Chamada e áudio dependem dos rótulos da interface em português do Brasil e podem precisar de ajustes quando o WhatsApp mudar.
 
@@ -49,6 +49,8 @@ O Android pode solicitar autorização para instalar aplicativos desta fonte. Es
 - “Ouvir minhas mensagens”
 - “Reproduzir áudios do WhatsApp”
 - “Escute a mensagem de voz do zap”
+- “Toque o próximo áudio”
+- “Repita o último áudio”
 - “Ligar para Maria no WhatsApp”
 - “Pausar música”
 - “Próxima faixa”
@@ -58,6 +60,28 @@ O Android pode solicitar autorização para instalar aplicativos desta fonte. Es
 - “Enviar mensagem para João dizendo estou chegando”
 - “Abrir mapa para Avenida Paulista 1000”
 - “Abrir acessibilidade”
+- “Leia esta tela”
+- “Toque em pesquisar”
+- “Digite restaurante”
+- “Role para baixo”
+- “Volte”
+
+## Treinar o cérebro
+
+O modelo incluído no APK é uma rede neural compacta de duas etapas: n-gramas de
+caracteres alimentam uma camada oculta treinada para reconhecer a intenção. A
+inferência é implementada em Java puro e o arquivo de pesos tem menos de 500 KB.
+
+```bash
+python -m pip install -r training/requirements.txt
+python training/test_brain.py
+python training/train_brain.py
+python training/check_quality.py --minimum 0.90
+```
+
+Veja [`training/README.md`](training/README.md) para o corpus, relatório e formato
+de exportação. A arquitetura permite substituir esse primeiro cérebro por um
+Transformer quantizado posteriormente, sem reescrever o executor Android.
 
 ## Abrir e executar
 
@@ -67,13 +91,13 @@ O Android pode solicitar autorização para instalar aplicativos desta fonte. Es
 4. Execute o módulo `app`.
 5. Conceda microfone ao tocar em **Ouvir comando**. O acesso a contatos só é solicitado ao usar um comando que precise localizar uma pessoa.
 
-O projeto usa `compileSdk 35`, `targetSdk 35`, Java 17 e Android Gradle Plugin 8.7.3. Nenhuma biblioteca externa de runtime é necessária. O pacote-fonte não inclui binários do Gradle Wrapper; se a IDE solicitar a distribuição, use Gradle 8.9.
+O projeto usa `compileSdk 35`, `targetSdk 35`, Java 17 e Android Gradle Plugin 8.7.3. A inferência neural não adiciona biblioteca externa ao APK. O pacote-fonte não inclui binários do Gradle Wrapper; se a IDE solicitar a distribuição, use Gradle 8.9.
 
 ## Limite de “todos os aplicativos”
 
 O Android isola aplicativos. Este MVP consegue descobrir e abrir apps com atividade de inicialização visível. Ações internas dependem do que cada app publica como `Intent`, deep link ou API. O manifesto usa uma consulta direcionada a atividades `MAIN/LAUNCHER`; não solicita a permissão ampla e sensível `QUERY_ALL_PACKAGES`.
 
-Controlar elementos de tela de terceiros exigiria um `AccessibilityService`. Isso deve ser uma fase separada, limitada a ações assistivas claras, com ativação e consentimento explícitos; não é uma API para controle irrestrito ou autônomo.
+O modo de navegação usa `AccessibilityService` para agir somente sobre elementos expostos pelo aplicativo. Interfaces sem rótulos acessíveis, telas protegidas ou componentes desenhados fora da árvore de acessibilidade podem não funcionar. Não existe garantia técnica de controle de absolutamente todos os aplicativos.
 
 ## Segurança e privacidade
 

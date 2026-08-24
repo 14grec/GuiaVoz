@@ -1,0 +1,50 @@
+text,intent
+preciso que voce me oriente,HELP
+ensine como conversar com voce,HELP
+fale o horario deste momento,TIME
+quantas horas o relogio marca,TIME
+coloque o telegram na tela,OPEN_APP
+quero entrar no aplicativo nubank,OPEN_APP
+diga quais apps posso usar,LIST_APPS
+quantos aplicativos podem ser abertos,LIST_APPS
+chamada normal para pedro,DIAL
+use o telefone para falar com beatriz,DIAL
+escreva para bia dizendo cheguei,SMS
+avise lucas por texto que estou bem,SMS
+rota ate a farmacia,MAP
+localize o caminho para a prefeitura,MAP
+quero habilitar o servico assistivo,ACCESSIBILITY_SETTINGS
+leve me as opcoes de controle acessivel,ACCESSIBILITY_SETTINGS
+conte os textos novos do zap,WHATSAPP_MESSAGES
+fale o conteudo recebido sem tocar os audios,WHATSAPP_MESSAGES
+fale os textos e depois os recados de voz,WHATSAPP_LISTEN_MESSAGES
+quero acompanhar toda a fila recebida,WHATSAPP_LISTEN_MESSAGES
+chamada no zap com pedro,WHATSAPP_CALL
+fale com beatriz usando a ligacao do whats,WHATSAPP_CALL
+escutar recados de voz novos,PLAY_WHATSAPP_AUDIO
+coloque para tocar o que recebi em audio,PLAY_WHATSAPP_AUDIO
+passe para o recado seguinte,PLAY_NEXT_AUDIO
+avance na fila de mensagens de voz,PLAY_NEXT_AUDIO
+ouvir de novo o recado anterior,REPEAT_AUDIO
+nao compreendi repita o que tocou,REPEAT_AUDIO
+prossiga do ponto salvo,CONTINUE_SESSION
+retorne para o restante da leitura,CONTINUE_SESSION
+retomar o som,MEDIA_PLAY
+volte com a reproducao que estava pausada,MEDIA_PLAY
+segure a musica,MEDIA_PAUSE
+quero interromper temporariamente o som,MEDIA_PAUSE
+trocar de faixa,MEDIA_NEXT
+passe esta musica e coloque outra,MEDIA_NEXT
+descreva o que aparece aqui,READ_SCREEN
+conte quais controles estao visiveis,READ_SCREEN
+pressione onde esta escrito aceitar,TAP_ELEMENT
+escolha o controle de pesquisa,TAP_ELEMENT
+preencha com belo horizonte,TYPE_TEXT
+coloque farmacia vinte e quatro horas no campo,TYPE_TEXT
+mostrar a parte de baixo,SCROLL_DOWN
+avance a lista para os itens posteriores,SCROLL_DOWN
+mostrar a parte de cima,SCROLL_UP
+retorne a lista aos itens anteriores,SCROLL_UP
+retornar uma tela,BACK
+saia desta janela e volte uma etapa,BACK
+

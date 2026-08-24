@@ -1,5 +1,8 @@
 .gradle/
 .idea/
+*.pyc
+training/__pycache__/
+app/src/main/assets/guiavoz_brain.bin
 build/
 app/build/
 local.properties

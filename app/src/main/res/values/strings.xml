@@ -8,6 +8,6 @@
     <string name="typed_command_hint">Digite um comando</string>
     <string name="status_ready">Pronto para ajudar.</string>
     <string name="notification_settings">Acesso às notificações</string>
-    <string name="whatsapp_accessibility">Controle do WhatsApp</string>
-    <string name="whatsapp_accessibility_description">Permite ao GuiaVoz tocar somente nos controles de chamada e reprodução de áudio do WhatsApp, após um comando explícito.</string>
+    <string name="whatsapp_accessibility">Navegação por voz</string>
+    <string name="whatsapp_accessibility_description">Permite ao GuiaVoz ler e controlar elementos visíveis de outros aplicativos somente após um comando explícito. Senhas não são lidas e ações sensíveis são bloqueadas.</string>
 </resources>
